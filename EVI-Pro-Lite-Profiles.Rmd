@@ -43,7 +43,6 @@ Specify user variable options stored in a vector. Where there are different perm
 ```
 
 ```{r}
-
 temp_vec <- c("-20C"
               # "-10C",
               # "0C",
@@ -101,7 +100,6 @@ mean_dvmt_vec %>% is.atomic()
 Run the function that wraps the whole thing on each element in the list.
 
 ```{r message=FALSE}
-
 Sys.time()
 registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
 plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
@@ -110,11 +108,11 @@ options(future.globals.maxSize = 10000 * 1024^2) #Set max RAM allowed for global
 for(i in 1:length(temp_vec)) {
 
   # load the raw data for the
-  evi_data_path <- paste0("data/preprocessed/evi_raw/", temp_vec[i], ".rds")
+  evi_data_path <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
   evi_raw <- readRDS(evi_data_path)
   
   # load the load profiles
-  loadprof_data_path <- paste0("data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  loadprof_data_path <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   evi_load_profiles <- readRDS(loadprof_data_path)
   
   #Parallel sessions for permutations of all other variables
@@ -127,7 +125,8 @@ for(i in 1:length(temp_vec)) {
           foreach(home = names(home_power_vec), .combine='rbind') %:%
           foreach(work = names(work_power_vec), .combine='rbind') %:%
           foreach(loc = loc_class_vec, .combine='rbind') %dopar% {
-            
+            # TODO add SUV vehicle class here
+          	
             #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
             load_to_bind <- openEVI(evi_raw,
             																								numveh,
