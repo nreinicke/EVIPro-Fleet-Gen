@@ -63,18 +63,28 @@ evi_fleetGen <- function(evi_raw,
  #   all_weights[like(name, "week")][, .(sum = sum(weight))]
 
   # Use expand.grid to create a data table of all permutations of groups to consider
-  all_perms <- as.data.table(expand.grid(lapply(t_weights[c("pev_weights","pref_weights", "home_weights", "work_weights", "vmt_weights")], function(x) x[, name])))
+  all_perms <- as.data.table(expand.grid(lapply(t_weights[c("pev_weights",
+  																																																										"pref_weights", 
+  																																																										"home_weights",
+  																																																										"work_weights",
+  																																																										"vmt_weights",
+  																																																										"vehicle_weights")], function(x) x[, name])))
   
   # specify column names
-  colnames(all_perms) <- c("pev_type","preferred_loc", "power_home", "power_work", "schedule_vmt_bin")  
+  colnames(all_perms) <- c("pev_type",
+  																									"preferred_loc",
+  																									"power_home", 
+  																									"power_work",
+  																									"schedule_vmt_bin",
+  																									"vehicle_class")  
   
   
   #Calculate total weight for each permutation of groups
   # Iteratively join all_weights to all_perms, calculate the total weight for each permutation, then remove the joined weight column.
-  setkey(all_weights,name) # sorting function (DT, key) for efficiently sorting data for other functions
+  setkey(all_weights, name) # sorting function (DT, key) for efficiently sorting data for other functions
   
   all_perms_names <- colnames(all_perms)
-  all_perms[,stat_weight := 1] # mutate column / give column value 1
+  all_perms[, stat_weight := 1] # mutate column / give column value 1
  
    for(i in 1:length(all_perms_names)) {
     setkeyv(all_perms, all_perms_names[[i]])
@@ -91,6 +101,9 @@ evi_fleetGen <- function(evi_raw,
   all_perms[, preferred_loc := factor(preferred_loc, levels=c("PrefHome","PrefWork"))]
   all_perms[, pev_type := factor(pev_type, levels=c("PHEV20","PHEV50","BEV100","BEV250"))]
 
+  # factor the vehicle class
+		all_perms[, vehicle_class := factor(vehicle_class, levels = c("Sedan",
+																																																																"SUV"))]
   ################################################################################################################################
   #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
   ################################################################################################################################
@@ -105,7 +118,7 @@ evi_fleetGen <- function(evi_raw,
   
   ############ Longest code run time ####################
   fleet <- all_perms[stat_weight!=0,
-              do.call("rbind",replicate(round(stat_weight*fleet_size,0),.SD,simplify=FALSE)),
+              do.call("rbind",replicate(round(stat_weight * fleet_size,0),.SD,simplify=FALSE)),
               by = c("power_work", "power_home", "preferred_loc", "pev_type", "schedule_vmt_bin")]
   
   # partition schedule_vmt_bin to actual mileage bins and day of week indicators
