@@ -92,8 +92,6 @@ sedan_suv_path <- list(c("evi_raw/",
 																				"load_profile/"),
 																				c("evi_raw_suv/",
 																						"load_profile_suv/"))
-
-mean_dvmt_vec %>% is.atomic()
 ```
 
 
@@ -107,12 +105,29 @@ options(future.globals.maxSize = 10000 * 1024^2) #Set max RAM allowed for global
 
 for(i in 1:length(temp_vec)) {
 
-  # load the raw data for the
-  evi_data_path <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
-  evi_raw <- readRDS(evi_data_path)
+  # load the raw data for sedans
+  evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
+  evi_raw_sedan <- readRDS(evi_data_path_sedan)
+  
+  # add column for vehicle class
+  evi_raw_sedan[, "vehicle_class" := "sedan"]
+  
+  # Repeat for SUVs
+  evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
+  evi_raw_suv <- readRDS(evi_data_path_suv)
+  
+  # add column for vehicle class
+  evi_raw_suv[, "vehicle_class" := "SUV"]
+  
+  # bind together into a single data.table
+  evi_raw <- rbind(evi_raw_suv,
+  																	evi_raw_sedan)
+  
+  rm(evi_raw_suv,
+  			evi_raw_sedan)
   
   # load the load profiles
-  loadprof_data_path <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   evi_load_profiles <- readRDS(loadprof_data_path)
   
   #Parallel sessions for permutations of all other variables
@@ -129,6 +144,7 @@ for(i in 1:length(temp_vec)) {
           	
             #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
             load_to_bind <- openEVI(evi_raw,
+            																								evi_load_profiles,
             																								numveh,
                                     pev_type_vec[[pev]],
                                     dvmt,
