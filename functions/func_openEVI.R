@@ -33,8 +33,8 @@ source("functions/func_GenFleetProfiles.R") #Creates 48-hour load profile for th
 library(data.table)
 
 openEVI <- function(evi_raw,
-                    #evi_load_profiles,
-                    #temp = "-20C",
+                    evi_load_profiles,
+                    #temp = "-20C", # varied in for loop
                     fleet = c(1000),
                     pev = c(0.25,0.25,0.25,0.25),
                     dvmt = c(30),
