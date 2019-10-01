@@ -118,8 +118,13 @@ evi_fleetGen <- function(evi_raw,
   
   ############ Longest code run time ####################
   fleet <- all_perms[stat_weight!=0,
-              do.call("rbind",replicate(round(stat_weight * fleet_size,0),.SD,simplify=FALSE)),
-              by = c("power_work", "power_home", "preferred_loc", "pev_type", "schedule_vmt_bin")]
+              do.call("rbind", replicate(round(stat_weight * fleet_size,0),.SD,simplify=FALSE)),
+              by = c("power_work", 
+              							"power_home", 
+              							"preferred_loc",
+              							"pev_type",
+              							"schedule_vmt_bin",
+              							"vehicle_class")]
   
   # partition schedule_vmt_bin to actual mileage bins and day of week indicators
   # recast schedule_vmt_bin to integer
@@ -166,20 +171,34 @@ evi_fleetGen <- function(evi_raw,
   #     and associate it with each entry in your fleet. You now have a list of vids equal in size to your fleet.
   # Note that the number of unique vids may be less than the fleet size. This is because one vid can apply to more than
   #     one group characteristic permutation
-  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin"))
-  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin"))
+  setkeyv(evi_raw, c("day_of_week",
+  																			"power_work",
+  																			"power_home",
+  																			"preferred_loc",
+  																			"pev_type",
+  																			"schedule_vmt_bin",
+  																			"vehicle_class"))
+  
+  setkeyv(fleet, c("day_of_week",
+  																	"power_work",
+  																	"power_home",
+  																	"preferred_loc",
+  																	"pev_type",
+  																	"schedule_vmt_bin",
+  																	"vehicle_class"))
   
   #Add VIDs to fleet[]
   fleet <- evi_raw[fleet,sample(unique_vid,1,replace=TRUE),by=.EACHI] #with replacement
   setnames(fleet,"V1","unique_vid")
   
-  #Create a specific fleet ID number for each vehicle in the fleet. The unique_vid value can be chosen more than once, so cannot be
-  # relied upon to be a truly unique identifier for each vehicle.
+  # Create a specific fleet ID number for each vehicle in the fleet 
+  # unique_vid value can be chosen more than once 
+  # so cannot be relied upon to be a truly unique identifier for each vehicle.
   fleet[,fleet_id:=1:.N]
   
   #Check for and remove NA rows
   if(nrow(fleet[is.na(unique_vid)]) > 0 ) {
-    print(paste0("NAs found. Removing ",as.character(nrow(fleet[is.na(unique_vid)]))," vehicles."))
+    warning(paste0("NAs found. Removing ",as.character(nrow(fleet[is.na(unique_vid)]))," vehicles."))
     fleet <- fleet[!is.na(unique_vid),.SD]
   }
   
