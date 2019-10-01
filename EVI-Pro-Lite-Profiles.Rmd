@@ -51,51 +51,45 @@ temp_vec <- c("-20C"
               # "30C",
               # "40C"
               ) #celsius
-pev_type_vec <- list("BEV25" = c(0, 0, .30, .70) # PHEV20, PHEV50,BEV100, BEV250; all BEV
-                     #"BEV50" = c(.10, .15, .25, .50), # BEV Dominant
-                     #"BEV75" = c(.25, .50, .10, .15), # PHEV Dominant
-                     #"BEV100" = c(.15, .35, .15, .35) # PHEV/BEV Equal share
+pev_type_vec <- list("BEV25" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
+                     "BEV50" = c(.10, .15, .25, .50), # BEV Dominant
+                     "BEV75" = c(.25, .50, .10, .15), # PHEV Dominant
+                     "BEV100" = c(.15, .35, .15, .35) # PHEV/BEV Equal share
                  )
 work_power_vec <- list("L2100" = c(0,1))
 loc_class_vec <- list("urban")
-fleet_size_vec <- list(500
-                    #1000,
-                    #2500,
-                    #5000
-                    #10000,
-                    #20000,
-                    #50000
+fleet_size_vec <- list(500,
+                    1000,
+                    2500,
+                    5000,
+                    10000,
+                    20000,
+                    50000
                     ) #count of total number of PEVs
-mean_dvmt_vec <- c(#15,
-                   #20,
-                   25
-                   #30,
-                   #40,
-                   #50
+mean_dvmt_vec <- c(15,
+                   20,
+                   25,
+                   30,
+                   40,
+                   50
                    ) #average daily miles traveled per vehicle
-pref_vec <- list("Home80" = c(0.8,0.2)
-                 #"Home50" = c(0.5,0.5)
+pref_vec <- list("Home80" = c(0.8,0.2),
+                 "Home50" = c(0.5,0.5)
                  )
-home_power_vec <- list("HA100_L225" = c(0.75,0.25,0)#, #100% access to home power, 75% of those L1
-                       # "HA100_L275" = c(0.25,0.75,0), #100% access to home power, 75% of those L2
-                       # "HA100_L2100" = c(0,1,0), #100% access to home power, all of those L2
-                       # "HA75_L225" = c(0.5625,0.1875,0.25), #75% access to home power, 75% of those L1
-                       # "HA75_L275" = c(0.1875,0.5625,0.25), #75% access to home power, 75% of those L2
-                       # "HA75_L2100" = c(0,0.75,0.25), #75% access to home power, all of those L2
-                       # "HA50_L225" = c(0.375,0.125,0.5), #50% access to home power, 75% of those L1
-                       # "HA50_L275" = c(0.125,0.375,0.5), #50% access to home power, 75% of those L2
-                       # "HA50_L2100" = c(0,0.5,0.5) #50% access to home power, all of those L2
+home_power_vec <- list("HA100_L225" = c(0.75,0.25,0), #100% access to home power, 75% of those L1
+                       "HA100_L275" = c(0.25,0.75,0), #100% access to home power, 75% of those L2
+                       "HA100_L2100" = c(0,1,0), #100% access to home power, all of those L2
+                       "HA75_L225" = c(0.5625,0.1875,0.25), #75% access to home power, 75% of those L1
+                       "HA75_L275" = c(0.1875,0.5625,0.25), #75% access to home power, 75% of those L2
+                       "HA75_L2100" = c(0,0.75,0.25), #75% access to home power, all of those L2
+                       "HA50_L225" = c(0.375,0.125,0.5), #50% access to home power, 75% of those L1
+                       "HA50_L275" = c(0.125,0.375,0.5), #50% access to home power, 75% of those L2
+                       "HA50_L2100" = c(0,0.5,0.5) #50% access to home power, all of those L2
                        )
 # adding the vehicle class variable
-veh_class_vec <- list("sed80_suv20" = c(0.8, 0.2), # sedan dominant
-																						"sed50_suv50" = c(0.5, 0.5), # equal distribution
-																						"sed20_suv80" = c(0.2, 0.8)) # suv dominant
-
-# this would produce separate files
-# sedan_suv_path <- list(c("evi_raw/",
-# 																				"load_profile/"),
-# 																				c("evi_raw_suv/",
-# 																						"load_profile_suv/"))
+veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
+																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
+																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
 ```
 
 
@@ -105,16 +99,16 @@ Run the function that wraps the whole thing on each element in the list.
 Sys.time()
 registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
 plan(multiprocess, workers = 3, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
-options(future.globals.maxSize = 10000 * 1024^2) #Set max RAM allowed for global variables to 10GB
+options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
 for(i in 1:length(temp_vec)) {
 
   # load the raw data for sedans
   evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
-  evi_raw_sedan <- readRDS(evi_data_path_sedan)
+  evi_raw <- readRDS(evi_data_path_sedan)
   
   # add column for vehicle class
-  evi_raw_sedan[, "vehicle_class" := "Sedan"]
+  evi_raw[, "vehicle_class" := "Sedan"]
   
   # Repeat for SUVs
   evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
@@ -125,17 +119,16 @@ for(i in 1:length(temp_vec)) {
   
   # bind together into a single data.table
   evi_raw <- rbind(evi_raw_suv,
-  																	evi_raw_sedan)
+  																	evi_raw)
   
-  rm(evi_raw_suv,
-  			evi_raw_sedan)
+  rm(evi_raw_suv)
   
   # load the load profiles
   loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  evi_load_profiles_sedan <- readRDS(loadprof_data_path_sedan)
+  evi_load_profiles <- readRDS(loadprof_data_path_sedan)
   
   # add vehicle class
-  evi_load_profiles_sedan[, "vehicle_class" := "sedan"]
+  evi_load_profiles[, "vehicle_class" := "sedan"]
   
   # Repeat for SUVs
   loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
@@ -144,12 +137,11 @@ for(i in 1:length(temp_vec)) {
   # add vehicle class
   evi_load_profiles_suv[, "vehicle_class" := "SUV"]
   
-   # bind together into a single data.table
+  # bind together into a single data.table
   evi_load_profiles <- rbind(evi_load_profiles_suv,
-  																											evi_load_profiles_sedan)
+  																											evi_load_profiles)
   
-  rm(evi_load_profiles_suv,
-  			evi_load_profiles_sedan)
+  rm(evi_load_profiles_suv)
   
   gc()
   #Parallel sessions for permutations of all other variables
@@ -166,7 +158,7 @@ for(i in 1:length(temp_vec)) {
           	
             #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
             load_to_bind <- openEVI(evi_raw,
-            																								evi_load_profiles,
+            																								# evi_load_profiles,
             																								numveh,
                                     pev_type_vec[[pev]],
                                     dvmt,
@@ -186,7 +178,7 @@ for(i in 1:length(temp_vec)) {
                                 home_access = strsplit(home,c("_"))[[1]][1],
                                 home_power_dist = strsplit(home,c("_"))[[1]][2],
                                 work_power_dist = work,
-            																				vehcile_class_dist = vclass)]
+            																				vehicle_class_dist = vclass)]
             
             #Reduce fleet activity down to 24-hour aggregated load profile
             # Note: Remove this step, and reduce the number of variable permutations, to confirm imposed weight distributions, vehicle counts, etc.
