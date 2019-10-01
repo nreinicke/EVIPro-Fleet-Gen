@@ -86,12 +86,16 @@ home_power_vec <- list("HA100_L225" = c(0.75,0.25,0)#, #100% access to home powe
                        # "HA50_L275" = c(0.125,0.375,0.5), #50% access to home power, 75% of those L2
                        # "HA50_L2100" = c(0,0.5,0.5) #50% access to home power, all of those L2
                        )
+# adding the vehicle class variable
+veh_class_vec <- list("sed80_suv20" = c(0.8, 0.2), # sedan dominant
+																						"sed50_suv50" = c(0.5, 0.5), # equal distribution
+																						"sed20_suv80" = c(0.2, 0.8)) # suv dominant
 
 # this would produce separate files
-sedan_suv_path <- list(c("evi_raw/",
-																				"load_profile/"),
-																				c("evi_raw_suv/",
-																						"load_profile_suv/"))
+# sedan_suv_path <- list(c("evi_raw/",
+# 																				"load_profile/"),
+# 																				c("evi_raw_suv/",
+# 																						"load_profile_suv/"))
 ```
 
 
@@ -100,7 +104,7 @@ Run the function that wraps the whole thing on each element in the list.
 ```{r message=FALSE}
 Sys.time()
 registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
-plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
+plan(multiprocess, workers = 3, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
 options(future.globals.maxSize = 10000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
 for(i in 1:length(temp_vec)) {
@@ -110,7 +114,7 @@ for(i in 1:length(temp_vec)) {
   evi_raw_sedan <- readRDS(evi_data_path_sedan)
   
   # add column for vehicle class
-  evi_raw_sedan[, "vehicle_class" := "sedan"]
+  evi_raw_sedan[, "vehicle_class" := "Sedan"]
   
   # Repeat for SUVs
   evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
@@ -147,6 +151,7 @@ for(i in 1:length(temp_vec)) {
   rm(evi_load_profiles_suv,
   			evi_load_profiles_sedan)
   
+  gc()
   #Parallel sessions for permutations of all other variables
   fleet_load <-
       foreach(numveh = fleet_size_vec, .combine='rbind') %do% {
@@ -156,8 +161,8 @@ for(i in 1:length(temp_vec)) {
           foreach(pref = names(pref_vec), .combine='rbind') %:%
           foreach(home = names(home_power_vec), .combine='rbind') %:%
           foreach(work = names(work_power_vec), .combine='rbind') %:%
-          foreach(loc = loc_class_vec, .combine='rbind') %dopar% {
-            # TODO add SUV vehicle class here
+          foreach(loc = loc_class_vec, .combine='rbind') %:%
+        		foreach(vclass = names(veh_class_vec), .combine = "rbind") %dopar% {
           	
             #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
             load_to_bind <- openEVI(evi_raw,
@@ -168,7 +173,8 @@ for(i in 1:length(temp_vec)) {
                                     pref_vec[[pref]],
                                     home_power_vec[[home]],
                                     work_power_vec[[work]],
-                                    loc)
+                                    loc,
+            																								veh_class_vec[[vclass]])
        
             #Append labels to indicate variable permutations of this run
             load_to_bind[, ':='(loc_class = loc,
@@ -179,7 +185,8 @@ for(i in 1:length(temp_vec)) {
                                 pref_dist = pref,
                                 home_access = strsplit(home,c("_"))[[1]][1],
                                 home_power_dist = strsplit(home,c("_"))[[1]][2],
-                                work_power_dist = work)]
+                                work_power_dist = work,
+            																				vehcile_class_dist = vclass)]
             
             #Reduce fleet activity down to 24-hour aggregated load profile
             # Note: Remove this step, and reduce the number of variable permutations, to confirm imposed weight distributions, vehicle counts, etc.
@@ -198,8 +205,22 @@ for(i in 1:length(temp_vec)) {
                                                 "pev_type", 
                                                 "dest_type", 
                                                 "dest_chg_level",
-                                                "time_of_day")]
-            setkey(load_to_bind,loc_class,temp_c,fleet_size,mean_dvmt,pev_dist,pref_dist,home_access,home_power_dist,work_power_dist,day_of_week,pev_type,dest_type,dest_chg_level,time_of_day)
+                                                "time_of_day",
+                                         							"vehicle_class_dist")]
+            setkey(load_to_bind,
+            							loc_class,temp_c,
+            							fleet_size,
+            							mean_dvmt,
+            							pev_dist,
+            							pref_dist,
+            							home_access,
+            							home_power_dist,
+            							work_power_dist,
+            							day_of_week,
+            							pev_type,
+            							dest_type,
+            							dest_chg_level,
+            							time_of_day)
             
             gc()
             
@@ -209,7 +230,7 @@ for(i in 1:length(temp_vec)) {
   
   #Write fleet_load out to disk
   fwrite(fleet_load,
-  										file = paste0("output/EVI-Pro-Lite_Run/",
+  										file = paste0("outputs/testing/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
   																								temp_vec[i],
   																								".csv"))
