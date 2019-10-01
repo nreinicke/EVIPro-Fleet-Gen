@@ -128,7 +128,24 @@ for(i in 1:length(temp_vec)) {
   
   # load the load profiles
   loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  evi_load_profiles <- readRDS(loadprof_data_path)
+  evi_load_profiles_sedan <- readRDS(loadprof_data_path_sedan)
+  
+  # add vehicle class
+  evi_load_profiles_sedan[, "vehicle_class" := "sedan"]
+  
+  # Repeat for SUVs
+  loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
+  
+  # add vehicle class
+  evi_load_profiles_suv[, "vehicle_class" := "SUV"]
+  
+   # bind together into a single data.table
+  evi_load_profiles <- rbind(evi_load_profiles_suv,
+  																											evi_load_profiles_sedan)
+  
+  rm(evi_load_profiles_suv,
+  			evi_load_profiles_sedan)
   
   #Parallel sessions for permutations of all other variables
   fleet_load <-
