@@ -62,7 +62,9 @@ openEVI <- function(evi_raw,
                             loc_class = loc_class)
   
   #Create 24-hour load profile for the fleet
-  evi_fleet_prof <- get_fleet_profiles(evi_fleet, fleet, evi_load_profiles)
+  evi_fleet_prof <- get_fleet_profiles(evi_fleet, 
+  																																					fleet, 
+  																																					evi_load_profiles)
   
   #Return just the fleet load profile. Ignore the fleet activity and fleet stats for the iterative generation of load profiles for NREL
   return(evi_fleet_prof)
