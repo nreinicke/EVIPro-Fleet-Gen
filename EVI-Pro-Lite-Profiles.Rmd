@@ -43,39 +43,50 @@ Specify user variable options stored in a vector. Where there are different perm
 ```
 
 ```{r}
-temp_vec <- c("-20C"
-              # "-10C",
-              # "0C",
-              # "10C",
-              # "20C",
-              # "30C",
-              # "40C"
-              ) #celsius
-pev_type_vec <- list("BEV25" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
-                     "BEV50" = c(.10, .15, .25, .50), # BEV Dominant
-                     "BEV75" = c(.25, .50, .10, .15), # PHEV Dominant
-                     "BEV100" = c(.15, .35, .15, .35) # PHEV/BEV Equal share
-                 )
-work_power_vec <- list("L2100" = c(0,1))
-loc_class_vec <- list("urban")
+# count of total number of PEVs
 fleet_size_vec <- list(500,
-                    1000,
-                    2500,
-                    5000,
-                    10000,
-                    20000,
-                    50000
-                    ) #count of total number of PEVs
+                     1000,
+                     2500,
+                     5000,
+                     10000,
+                     20000,
+                     50000) 
+
+# average daily miles traveled per vehicle
 mean_dvmt_vec <- c(15,
                    20,
                    25,
                    30,
                    40,
-                   50
-                   ) #average daily miles traveled per vehicle
-pref_vec <- list("Home80" = c(0.8,0.2),
-                 "Home50" = c(0.5,0.5)
-                 )
+                   50) 
+
+# Temperature
+temp_vec <- c("-20C", # celsius
+              "-10C",
+              "0C",
+              "10C",
+              "20C",
+              "30C",
+              "40C") 
+
+# PEV Type (confirm the meaning of the labels) (def named wrong)
+pev_type_vec <- list("BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
+                     "BEV75" = c(.10, .15, .25, .50), # BEV Dominant
+                     "BEV25" = c(.25, .50, .10, .15), # PHEV Dominant
+                     "BEV50" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
+
+# adding the vehicle class variable
+veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
+																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
+																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
+
+# Geography
+loc_class_vec <- list("urban")
+
+# Day of Week (included in code)
+# c(Weekday, Weekend)
+
+# Home Access and Power
 home_power_vec <- list("HA100_L225" = c(0.75,0.25,0), #100% access to home power, 75% of those L1
                        "HA100_L275" = c(0.25,0.75,0), #100% access to home power, 75% of those L2
                        "HA100_L2100" = c(0,1,0), #100% access to home power, all of those L2
@@ -84,13 +95,28 @@ home_power_vec <- list("HA100_L225" = c(0.75,0.25,0), #100% access to home power
                        "HA75_L2100" = c(0,0.75,0.25), #75% access to home power, all of those L2
                        "HA50_L225" = c(0.375,0.125,0.5), #50% access to home power, 75% of those L1
                        "HA50_L275" = c(0.125,0.375,0.5), #50% access to home power, 75% of those L2
-                       "HA50_L2100" = c(0,0.5,0.5) #50% access to home power, all of those L2
-                       )
-# adding the vehicle class variable
-veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
-																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
-																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
+                       "HA50_L2100" = c(0,0.5,0.5)) #50% access to home power, all of those L2
+
+# Work power
+work_power_vec <- list("L2100" = c(0,1))
+
+# Home work preference
+pref_vec <- list("Home80" = c(0.8,0.2),
+                 "Home50" = c(0.5,0.5))
 ```
+
+Permutations calculation
+```{r}
+length(fleet_size_vec) * 
+	length(mean_dvmt_vec) * 
+	length(pev_type_vec) * 
+	length(veh_class_vec) * 
+	2 * # for day of week
+	length(home_power_vec) *
+	length(pref_vec)
+	length(temp_vec)
+```
+
 
 
 Run the function that wraps the whole thing on each element in the list.
@@ -98,7 +124,7 @@ Run the function that wraps the whole thing on each element in the list.
 ```{r message=FALSE}
 Sys.time()
 registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
-plan(multiprocess, workers = 3, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
+plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
 options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
 for(i in 1:length(temp_vec)) {
@@ -239,9 +265,17 @@ Sys.time()
 Spot check the output
 
 ```{r}
-check <- as.data.table(read.csv("output/EVI-Pro-Lite_Run190508_-20C.csv"))
+# remove residual data usage
+gc(full = T)
 
-sub_check <- check[fleet_size == 500 &
+# get files (currently only one file for testing)
+out_path <- dir("outputs/testing", full.names = T)
+
+# load data
+check <- fread(out_path)
+
+# subset as the full data is too large for a ggplot
+sub_check <- check[fleet_size == 50000 &
                      mean_dvmt == 50 &
                      pev_dist == "BEV100" &
                      pref_dist == "Home50" &
@@ -252,12 +286,45 @@ sub_check <- check[fleet_size == 500 &
                         "pev_type",
                         "dest_type",
                         "dest_chg_level",
-                        "time_of_day")]
+                        "time_of_day",
+                   					"vehicle_class_dist")]
 
-test1 <- ggplot(data = sub_check, aes(x=time_of_day, y=avg_kw)) +
-  geom_area(aes(fill=dest_chg_level)) +
-  facet_grid(day_of_week + pev_type ~ dest_type)
+test1 <- ggplot(data = sub_check, aes(x = time_of_day, y = avg_kw)) +
+  geom_area(aes(fill = dest_chg_level)) +
+  facet_grid(vehicle_class_dist ~ dest_type)
 
+test1
+```
+
+```{r}
+library(dplyr)
+
+sub_check <-
+	check %>% 
+			filter(fleet_size == 5000 & 
+											mean_dvmt == 50 &
+											pev_dist == "BEV25" & # (pev_distribution) labels currently wrong
+											pref_dist == "Home50" &
+											home_access == 'HA50' &
+											day_of_week == "weekday" &
+											pev_type == "BEV250") %>% 
+			group_by(day_of_week,
+												pev_type,
+												dest_type,
+												dest_chg_level,
+												time_of_day,
+												vehicle_class_dist) %>% 
+			summarise(avg_kw = sum(kw))
+
+
+sub_check %>% 
+	ggplot() +
+	geom_area(aes(x =time_of_day, y = avg_kw, fill = dest_chg_level)) +
+	facet_grid(vehicle_class_dist ~ dest_type) +
+	labs(subtitle = unique(sub_check$pev_type))
+```
+
+```{r}
 test2 <- ggplot(sub_check[dest_type == "Public" & day_of_week == "weekend" & pev_type == "BEV250",sum(avg_kw),by=c("time_of_day","dest_chg_level")], aes(x=time_of_day, y=V1)) +
   geom_line() +
   facet_grid(~dest_chg_level)
@@ -266,6 +333,7 @@ test3 <- ggplot(sub_check[,sum(avg_kw),by=c("day_of_week","dest_chg_level","time
   geom_area(aes(fill=dest_chg_level)) +
   facet_grid(~day_of_week)
 ```
+
 
 ```{r}
 # test_dt <- rbindlist(flt_list)
