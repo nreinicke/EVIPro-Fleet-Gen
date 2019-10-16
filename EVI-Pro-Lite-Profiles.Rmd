@@ -61,13 +61,13 @@ mean_dvmt_vec <- c(#15,
                    #50) 
 
 # Temperature
-temp_vec <- c("-20C")#, # celsius
-              # "-10C",
-              # "0C",
-              # "10C",
-              # "20C",
-              # "30C",
-              # "40C") 
+temp_vec <- c(#"-20C")#, # celsius
+               "-10C",
+               "0C",
+               "10C",
+               "20C",
+               "30C",
+               "40C") 
 
 # PEV Type (confirm the meaning of the labels) (def named wrong)
 pev_type_vec <- list(#"BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
