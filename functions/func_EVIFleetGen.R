@@ -25,7 +25,7 @@
 #        NOTE: no longer has legacy support for older scripts
 #   2.1: JKC added pev_type back in as NREL pushed for this. Dealing with NAs. Removed public_weights.
 
-#########################################################
+####################### Begin ##################################
 
 evi_fleetGen <- function(evi_raw,
                          fleet_size,
@@ -34,20 +34,20 @@ evi_fleetGen <- function(evi_raw,
                          bin_width = 10,
                          loc_class = "urban") {
   
-  ################################################################################################################################
-  #Create a data table of all potential permutations of fleet characteristics whose weights are user defined
-  ################################################################################################################################
+  ###############################################################################################################################_#
+  #Create a data table of all potential permutations of fleet characteristics whose weights are user defined####
+  ###############################################################################################################################_#
 
   # estimate vmt weights for the day of week
   # paste day of week onto name column, which aslo casts name to character 
-  vmt_list <- sapply(c("weekday", "weekend"), simplify = FALSE, USE.NAMES = TRUE, function(i) {
+  vmt_list <- sapply(c("weekday", "weekend"), simplify = FALSE, USE.NAMES = TRUE, function(day) {
     vmt_wt <- vmt_WeightDistGen(mean_vmt, 
                                 max_vmt = max(evi_raw$schedule_vmt, na.rm = TRUE),
                                 bin_width, 
                                 loc_class, 
-                                i) 
+                                day) 
     
-    vmt_wt[, name := paste(i, name, sep = "_")]
+    vmt_wt[, name := paste(day, name, sep = "_")]
   })
   
   vmt_wt <- rbindlist(vmt_list)
@@ -86,11 +86,11 @@ evi_fleetGen <- function(evi_raw,
   all_perms_names <- colnames(all_perms)
   all_perms[, stat_weight := 1] # mutate column / give column value 1
  
-   for(i in 1:length(all_perms_names)) {
-    setkeyv(all_perms, all_perms_names[[i]])
+   for(j in 1:length(all_perms_names)) {
+    setkeyv(all_perms, all_perms_names[[j]])
     all_perms <- all_weights[all_perms]
     all_perms[, stat_weight := stat_weight * weight][, weight := NULL]
-    setnames(all_perms, "name", all_perms_names[[i]])
+    setnames(all_perms, "name", all_perms_names[[j]])
   }
   
   #Factor values in each column. The corresponding factor numeric values correspond to the integer values used by NREL's
@@ -104,9 +104,9 @@ evi_fleetGen <- function(evi_raw,
   # factor the vehicle class
 		all_perms[, vehicle_class := factor(vehicle_class, levels = c("Sedan",
 																																																																"SUV"))]
-  ################################################################################################################################
-  #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
-  ################################################################################################################################
+  ###############################################################################################################################_#
+		# Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet ####
+		###############################################################################################################################_#
   
   #Create a fleet where each row is associated with a vehicle. Aggregated distribution matches weights - the number of
   # vehicles matching a particular description = fleet size * stat_weight; so if the combined weight for a vmt/public power/
@@ -135,26 +135,31 @@ evi_fleetGen <- function(evi_raw,
   #If the difference between the resulting fleet size from the above approach and the target fleet size is larger than 0.1%,
   #     use binary search fleet creation approach that ensures the correct fleet size at the expense of not obtaining the exact weights desired
   #     else apply small correction to obtain target fleet size if off by <= 0.1% of target fleet size
-  fleet_size_error <- sapply(c("weekday", "weekend"), simplify = TRUE, USE.NAMES = TRUE, function(i) {
+  fleet_size_error <- sapply(c("weekday", "weekend"), simplify = TRUE, USE.NAMES = TRUE, function(day) {
     
-    abs((nrow(fleet[day_of_week == i])-fleet_size)/fleet_size)
+    abs((nrow(fleet[day_of_week == day])-fleet_size)/fleet_size)
     
   })
 
+  # check for fleet size errors and correct
   if( max(fleet_size_error) > 0.001 ) {
-    print(paste0("Warning: fleet size error of ",as.character(fleet_size_error),". Updating..."))
+  	# suppress error on small errors
+  	# without this the console is flooded with warnings on large runs making serious errors hard to detect
+  	if(any(fleet_size_error > .1)) { # may change value
+  		print(paste0("Warning: fleet size error of ",as.character(fleet_size_error),". Updating..."))
+  	}
     
-    updated_fleet <- lapply(c("weekday", "weekend"), function(i){
+    updated_fleet <- lapply(c("weekday", "weekend"), function(day){
       
       #If too small, add vehicles by randomly duplicating existing vehicles in fleet[]
-      if(nrow(fleet[day_of_week == i]) < fleet_size ) {
-        index <- fleet[day_of_week == i, sample(.I, fleet_size - .N)]
-        fleet <- rbind(fleet[day_of_week == i], fleet[day_of_week == i][index])
+      if(nrow(fleet[day_of_week == day]) < fleet_size ) {
+        index <- fleet[day_of_week == day, sample(.I, fleet_size - .N)]
+        fleet <- rbind(fleet[day_of_week == day], fleet[day_of_week == day][index])
         
         #If too large, randomly delete vehicles from fleet[]
-      } else if(nrow(fleet[day_of_week == i]) > fleet_size ) {
-        index <- fleet[day_of_week == i, sample(.I, .N - fleet_size)]
-        fleet <- fleet[day_of_week == i][-index]
+      } else if(nrow(fleet[day_of_week == day]) > fleet_size ) {
+        index <- fleet[day_of_week == day, sample(.I, .N - fleet_size)]
+        fleet <- fleet[day_of_week == day][-index]
       }
     })
    
@@ -162,9 +167,9 @@ evi_fleetGen <- function(evi_raw,
     fleet <- rbindlist(updated_fleet) 
   }
   
-  ################################################################################################################################
-  #Identify vid that matches each row of characteristics in the fleet data table. Merge in charge session data.
-  ################################################################################################################################
+  ###############################################################################################################################_#
+  #Identify vid that matches each row of characteristics in the fleet data table. Merge in charge session data ####
+  ###############################################################################################################################_#
   
   #Randomly pull and append a vid that has the characteristics specified in the fleet data table.
   # Identify the subset of vids in evi that are associated with each row in your fleet. Randomly pull one of these vids
@@ -205,8 +210,9 @@ evi_fleetGen <- function(evi_raw,
   #Create the final charging activity itinerary for the full fleet. This pulls all charging events for each unique_vid.
   # Note: when using vmt_weights, this only works if there are matching labels for evi_raw[,schedule_vmt_bin] and fleet[,schedule_vmt_bin]. This
   #     only makes sense if the bin widths used for the two data tables are equal.
-  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin","unique_vid"))
-  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin","unique_vid"))
+  ## add vehicle class here ## 
+  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class","unique_vid"))
+  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class","unique_vid"))
   
   #Merge charge events with fleet
   fleet_activity <- evi_raw[fleet]
