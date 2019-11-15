@@ -45,18 +45,18 @@ Specify user variable options stored in a vector. Where there are different perm
 ```{r}
 # count of total number of PEVs
 fleet_size_vec <- list(#500,
-                     1000,
+                   #  1000,
                     # 2500,
                     # 5000,
-                     10000,
+                  #   10000,
                     # 20000,
                      50000) 
 
 # average daily miles traveled per vehicle
 mean_dvmt_vec <- c(#15,
                    #20,
-                   25,
-                   35,
+                  # 25,
+                  # 35,
                    45)#,
                    #50) 
 
@@ -72,13 +72,14 @@ temp_vec <- c(#"-20C")#, # celsius
 
 # PEV Type (confirm the meaning of the labels) (def named wrong)
 pev_type_vec <- list(#"BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
-                     "BEV_DOM" = c(.10, .15, .25, .50), # BEV Dominant
-                     "PHEV_DOM" = c(.25, .50, .10, .15), # PHEV Dominant
+                    # "BEV_DOM" = c(.10, .15, .25, .50), # BEV Dominant
+                   #  "PHEV_DOM" = c(.25, .50, .10, .15), # PHEV Dominant
                      "EQUAL_DIST" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
 
 # adding the vehicle class variable
-veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
-																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
+veh_class_vec <- list(
+	#"Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
+																					#	"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
 																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
 
 # Geography
@@ -88,28 +89,33 @@ loc_class_vec <- list("urban")
 # c(Weekday, Weekend)
 
 # Home Access and Power																	# L1, L2, % without access to home power 
-home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0), #100% access to home power, 80% of those L1
-                       "HA100_L2_80" = c(0.20, 0.80, 0), #100% access to home power, 80% of those L2
-                       "HA100_L2_50" = c(0.5, 0.5, 0), #100% access to home power, 50% of those L2
-                       "HA75_L2_20" = c(0.6, 0.15, 0.25), #75% access to home power, 80% of those L1
-                       "HA75_L2_80" = c(0.15, 0.6, 0.25), #75% access to home power, 80% of those L2
-                       "HA75_L2_50" = c(0.375, 0.375, 0.25), #75% access to home power, 50% of those L2
-                       "HA50_L2_20" = c(0.4, 0.1, 0.5), #50% access to home power, 80% of those L1
-                       "HA50_L2_80" = c(0.1, 0.4, 0.5), #50% access to home power, 80% of those L2
+home_power_vec <- list(
+# 	"HA100_L2_20" = c(0.80, 0.20, 0), #100% access to home power, 80% of those L1
+#                        "HA100_L2_80" = c(0.20, 0.80, 0), #100% access to home power, 80% of those L2
+#                        "HA100_L2_50" = c(0.5, 0.5, 0), #100% access to home power, 50% of those L2
+#                        "HA75_L2_20" = c(0.6, 0.15, 0.25), #75% access to home power, 80% of those L1
+#                        "HA75_L2_80" = c(0.15, 0.6, 0.25), #75% access to home power, 80% of those L2
+#                        "HA75_L2_50" = c(0.375, 0.375, 0.25), #75% access to home power, 50% of those L2
+#                        "HA50_L2_20" = c(0.4, 0.1, 0.5), #50% access to home power, 80% of those L1
+#                        "HA50_L2_80" = c(0.1, 0.4, 0.5), #50% access to home power, 80% of those L2
                        "HA50_L2_50" = c(0.25, 0.25, 0.5)) #50% access to home power, 50% of those L2
 
 # drop all L2 cases, replace with 50/50 split
 # make these an 80/20 split
 
 # Work power
-work_power_vec <- list("L2_100" = c(0, 0.8),
-																							"L2_50" = c(0.5, 0.5),
-																							"L2_20" = c(0.8, 0.2))
-
-# Home work preference
-pref_vec <- list("Home100" = c(1.0, 0.0),
-                 "Home80" = c(0.8, 0.2),
-																	"Home60" = c(0.6, 0.4))
+work_power_vec <- list(
+	# "L2_80" = c(0, 0.8),
+	# "L2_50" = c(0.5, 0.5),
+	"L2_20" = c(0.8, 0.2)
+	)
+	
+	# Home work preference
+	pref_vec <- list(
+	# "Home100" = c(1.0, 0.0),
+	# "Home80" = c(0.8, 0.2),
+	"Home60" = c(0.6, 0.4)
+	)
 ```
 
 Permutations calculation
@@ -272,6 +278,7 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   										file = paste0("outputs/testing/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
   																								temp_vec[i],
+  																								"dev",
   																								".csv"))
   
   rm(evi_raw)
