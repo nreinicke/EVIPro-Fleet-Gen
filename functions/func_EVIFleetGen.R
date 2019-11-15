@@ -211,8 +211,8 @@ evi_fleetGen <- function(evi_raw,
   # Note: when using vmt_weights, this only works if there are matching labels for evi_raw[,schedule_vmt_bin] and fleet[,schedule_vmt_bin]. This
   #     only makes sense if the bin widths used for the two data tables are equal.
   ## add vehicle class here ## 
-  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class","unique_vid"))
-  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class","unique_vid"))
+  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "unique_vid"))
+  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "unique_vid"))
   
   #Merge charge events with fleet
   fleet_activity <- evi_raw[fleet]
