@@ -17,12 +17,24 @@ library(data.table)
 library(magrittr)
 library(foreach)
 library(doFuture)
+library(doParallel)
 
 source("functions/func_openEVI.R")
 source("functions/func_randVector.R")
 
 theme_set(theme_bw() + theme(strip.background = element_blank()))
 ```
+
+Unregister function to 'clean' up the futures 
+This is an important step in the for loop as otherwise you will be haunted by ghosts of 'futures' past, which may cause catastrophic memory issues. 
+
+```{r}
+unregister <- function() {
+  env <- foreach:::.foreachGlobals
+  rm(list=ls(name=env), pos=env)
+}
+```
+
 
 Specify user variable options stored in a vector. Where there are different permutations of user variable sets, store as a list of vectors. future.apply will parallel iterate through the different permutations. 
 
@@ -44,7 +56,7 @@ Specify user variable options stored in a vector. Where there are different perm
 
 Create set of test vectors
 ```{r}
-fleet_size_vec <- list(500)
+fleet_size_vec <- c(500)
 mean_dvmt_vec <- c(15)
 pev_type_vec <- list("BEV100" = c(0, 0, .30, .70))
 veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2))
@@ -157,27 +169,33 @@ Run the function that wraps the whole thing on each element in the list.
 
 ```{r message=FALSE}
 Sys.time()
-registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
-plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
-options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
-lapply(temp_vec, function(temp) {
+getDoParName() # get parallel backend name
+getDoParWorkers() # get parallel backend workers (cores)
+# registerDoSEQ() # register default sequential / backup to unregister function
+
+ #lapply(temp_vec, function(temp) {
+for(i in 1:length(temp_vec)) {
+
+	# register the future each iteration of the for loop
+	# Using the DoParallel() instead of DoFuture() to try to stay within the foreach library of functions
+	registerDoParallel(cores = 4)
 	
-
-
-#for(i in 1:length(temp_vec)) {
+	# registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
+	# plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
+	options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
   # load the raw data for sedans
   # evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
   # evi_raw <- readRDS(evi_data_path_sedan)
-  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp, ".rds"))
+  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds"))
   # add column for vehicle class
   evi_raw[, "vehicle_class" := "Sedan"]
   
   # Repeat for SUVs
   # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
   # evi_raw_suv <- readRDS(evi_data_path_suv)
-		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp, ".rds"))
+		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds"))
   # add column for vehicle class
   evi_raw_suv[, "vehicle_class" := "SUV"]
   
@@ -192,7 +210,7 @@ lapply(temp_vec, function(temp) {
     # load the load profiles
   # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
-  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
+  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
   
   # add vehicle class
   evi_load_profiles[, "vehicle_class" := "sedan"]
@@ -200,7 +218,7 @@ lapply(temp_vec, function(temp) {
   # Repeat for SUVs
   # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
-  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
+  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
   # add vehicle class
   evi_load_profiles_suv[, "vehicle_class" := "SUV"]
   
@@ -240,7 +258,7 @@ lapply(temp_vec, function(temp) {
        
             # add columns to indicate variable permutations of this run
             load_to_bind[, ':='(loc_class = loc,
-                                temp_c = temp,
+                                temp_c = temp_vec[i],
                                 fleet_size = numveh,
                                 mean_dvmt = dvmt,
                                 pev_dist = pev,
@@ -307,19 +325,26 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   fwrite(fleet_load,
   										file = paste0("outputs/testing/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
-  																								temp,
+  																								temp_vec[i],
   																								"dev",
   																								".csv"))
   
+  # remove large objects
   rm(evi_raw)
   rm(evi_load_profiles)
   rm(fleet_load)
+  
+  # clean up memory
   gc()
   
+  # clean up backend
+  unregister()
+  
   # adding a check on the memory usage at each iteration for testing
-  print(object.size(x=lapply(ls(), get)), units="Mb")
-#} # end of for loop
-})
+  # The memory should be roughly the same size each time
+  warning(print(object.size(x=lapply(ls(), get)), units="Mb"))
+} # end of for loop
+#})
 Sys.time()
 ```
 
