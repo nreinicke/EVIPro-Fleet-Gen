@@ -33,7 +33,7 @@ source("functions/func_GenFleetProfiles.R") #Creates 48-hour load profile for th
 library(data.table)
 
 openEVI <- function(evi_raw,
-                    # evi_load_profiles,# experimenting with running off of global variables
+                    evi_load_profiles,# experimenting with running off of global variables
                     #temp = "-20C", # varied in for loop
                     fleet = c(1000),
                     pev = c(0.25,0.25,0.25,0.25),
@@ -42,7 +42,7 @@ openEVI <- function(evi_raw,
                     home = c(0.20,0.70,0.1),
                     work = c(0,1),
                     loc_class = "urban",
-																				veh_class = c(0.5, 0.5)) { # additional var here for suv/sedan
+																				veh_class) { # additional var here for sedan/suv
   
   #Create data table of fleet weights that will work with evi_fleetGen()
   fleet_weights <- create_fleet_weights(pev, # change for suvs
@@ -50,10 +50,9 @@ openEVI <- function(evi_raw,
                                         home,
                                         work,
   																																						veh_class)
-  
+
   #Create fleet
   # step through below function
-  # 
   evi_fleet <- evi_fleetGen(evi_raw,
                             fleet,
                             fleet_weights, # list of five weights
