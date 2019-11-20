@@ -148,38 +148,44 @@ options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global
 for(i in 1:length(temp_vec)) {
 
   # load the raw data for sedans
-  evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
-  evi_raw <- readRDS(evi_data_path_sedan)
-  
+  # evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
+  # evi_raw <- readRDS(evi_data_path_sedan)
+  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds"))
   # add column for vehicle class
   evi_raw[, "vehicle_class" := "Sedan"]
   
   # Repeat for SUVs
-  evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
-  evi_raw_suv <- readRDS(evi_data_path_suv)
-  
+  # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
+  # evi_raw_suv <- readRDS(evi_data_path_suv)
+		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds"))
   # add column for vehicle class
   evi_raw_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to the unique vids to distinguish from sedan data
+  evi_raw_suv[, unique_vid := unique_vid + 100000000]
   
   # bind together into a single data.table
   evi_raw <- rbind(evi_raw_suv,
   																	evi_raw)
   
   rm(evi_raw_suv)
-  
-  # load the load profiles
-  loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  evi_load_profiles <- readRDS(loadprof_data_path_sedan)
+    # load the load profiles
+  # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
+  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
   
   # add vehicle class
   evi_load_profiles[, "vehicle_class" := "sedan"]
   
   # Repeat for SUVs
-  loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
-  
+  # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
+  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
   # add vehicle class
   evi_load_profiles_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to unique vid to distinguish SUV class of vehicle
+  evi_load_profiles_suv[, unique_vid := unique_vid + 100000000]
   
   # bind together into a single data.table
   evi_load_profiles <- rbind(evi_load_profiles_suv,
@@ -202,7 +208,7 @@ for(i in 1:length(temp_vec)) {
           	
             #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
             load_to_bind <- openEVI(evi_raw,
-            																								# evi_load_profiles,
+            																								evi_load_profiles,
             																								numveh,
                                     pev_type_vec[[pev]],
                                     dvmt,
@@ -212,7 +218,7 @@ for(i in 1:length(temp_vec)) {
                                     loc,
             																								veh_class_vec[[vclass]])
        
-            #Append labels to indicate variable permutations of this run
+            # add columns to indicate variable permutations of this run
             load_to_bind[, ':='(loc_class = loc,
                                 temp_c = temp_vec[i],
                                 fleet_size = numveh,
@@ -289,6 +295,8 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   rm(evi_load_profiles)
   rm(fleet_load)
   gc()
+  
+  # adding a check on the memory usage at each iteration for testing
   print(object.size(x=lapply(ls(), get)), units="Mb")
 }
 Sys.time()
