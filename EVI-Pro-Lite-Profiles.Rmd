@@ -44,10 +44,26 @@ Specify user variable options stored in a vector. Where there are different perm
 
 Create set of test vectors
 ```{r}
+fleet_size_vec <- list(500)
+mean_dvmt_vec <- c(15)
+pev_type_vec <- list("BEV100" = c(0, 0, .30, .70))
+veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2))
+loc_class_vec <- list("urban")
+home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0))
+work_power_vec <- list("L2_80" = c(0, 0.8))
+pref_vec <- list("Home100" = c(1.0, 0.0))
 
+# I want temp to be length > 1
+temp_vec <- c("-20C", # celsius
+               "-10C",
+               "0C",
+               "10C",
+               "20C",
+               "30C",
+               "40C") 
 ```
 
-
+Full vectors
 ```{r}
 # count of total number of PEVs
 fleet_size_vec <- list(500,
@@ -145,19 +161,23 @@ registerDoFuture() #allows foreach() to use the future package when the %dopar% 
 plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
 options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
 
-for(i in 1:length(temp_vec)) {
+lapply(temp_vec, function(temp) {
+	
+
+
+#for(i in 1:length(temp_vec)) {
 
   # load the raw data for sedans
   # evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
   # evi_raw <- readRDS(evi_data_path_sedan)
-  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds"))
+  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp, ".rds"))
   # add column for vehicle class
   evi_raw[, "vehicle_class" := "Sedan"]
   
   # Repeat for SUVs
   # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
   # evi_raw_suv <- readRDS(evi_data_path_suv)
-		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds"))
+		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp, ".rds"))
   # add column for vehicle class
   evi_raw_suv[, "vehicle_class" := "SUV"]
   
@@ -172,7 +192,7 @@ for(i in 1:length(temp_vec)) {
     # load the load profiles
   # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
-  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
+  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
   
   # add vehicle class
   evi_load_profiles[, "vehicle_class" := "sedan"]
@@ -180,7 +200,7 @@ for(i in 1:length(temp_vec)) {
   # Repeat for SUVs
   # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
   # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
-  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
+  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
   # add vehicle class
   evi_load_profiles_suv[, "vehicle_class" := "SUV"]
   
@@ -220,7 +240,7 @@ for(i in 1:length(temp_vec)) {
        
             # add columns to indicate variable permutations of this run
             load_to_bind[, ':='(loc_class = loc,
-                                temp_c = temp_vec[i],
+                                temp_c = temp,
                                 fleet_size = numveh,
                                 mean_dvmt = dvmt,
                                 pev_dist = pev,
@@ -287,7 +307,7 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   fwrite(fleet_load,
   										file = paste0("outputs/testing/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
-  																								temp_vec[i],
+  																								temp,
   																								"dev",
   																								".csv"))
   
@@ -298,7 +318,8 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   
   # adding a check on the memory usage at each iteration for testing
   print(object.size(x=lapply(ls(), get)), units="Mb")
-}
+#} # end of for loop
+})
 Sys.time()
 ```
 
