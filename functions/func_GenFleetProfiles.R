@@ -19,14 +19,19 @@ get_fleet_profiles <- function(evi_fleet,
     fleet_size_scale <- 1
   }
   
-  #Build list of unique_vid from evi_fleet that we'll use to construct the full load profile
-  id_key <- evi_fleet$data[,.(unique_vid = unique(unique_vid)), by = fleet_id]
+  # Build list of unique_vid from evi_fleet that we'll use to construct the full load profile
+  # Each fleet_id may be associated with multiple vids
+		id_key <- evi_fleet$data[,.(unique_vid = unique(unique_vid)), by = fleet_id]
   setkey(id_key, unique_vid)
   
   #Subset load profiles specific to those unique_vids in the evi_fleet. This is the full load profile of the fleet
   setkey(load_profile, unique_vid, session_id)
-  fleet_load_profiles <- load_profile[unique_vid %in% evi_fleet$data[, unique(unique_vid)]] #Subset to those unique_vids we are interested in
-  fleet_load_profiles <- id_key[fleet_load_profiles, allow.cartesian = TRUE] #Capture duplicate unique_vids by using fleet_id
+  
+  # Subset to unique_vids have been identified in the evi_fleet
+  fleet_load_profiles <- load_profile[unique_vid %in% evi_fleet$data[, unique(unique_vid)]]
+  
+  # Capture duplicate unique_vids by using fleet_id
+  fleet_load_profiles <- id_key[fleet_load_profiles, allow.cartesian = TRUE] 
   
   #Add day_of_week information
   weekday_ref <- evi_fleet$data[!duplicated(unique_vid), day_of_week, by = unique_vid]
