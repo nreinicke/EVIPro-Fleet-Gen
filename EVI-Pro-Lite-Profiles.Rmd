@@ -56,7 +56,7 @@ Specify user variable options stored in a vector. Where there are different perm
 
 Create set of test vectors
 ```{r}
-fleet_size_vec <- c(500)
+fleet_size_vec <- c(50000)
 mean_dvmt_vec <- c(15)
 pev_type_vec <- list("BEV100" = c(0, 0, .30, .70))
 veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2))
@@ -268,6 +268,11 @@ for(i in 1:length(temp_vec)) {
                                 work_power_dist = work,
             																				vehicle_class_dist = vclass)]
             
+            # add check for distribution of suvs and sedans
+            # For some reason warnings aren't being displayed with this type of parallel processing
+            # Testing within the functions show the ratio of suv/sedan to be preserved
+            warning(print(load_to_bind[, .(perc = .N / nrow(load_to_bind) * 100), by = vehicle_class]))
+            
             # Reduce fleet activity down to 24-hour aggregated load profile
             # Note: Remove this step, and reduce the number of variable permutations, to confirm imposed weight distributions, vehicle counts, etc.
             load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24]
@@ -323,7 +328,7 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   
   #Write fleet_load out to disk
   fwrite(fleet_load,
-  										file = paste0("outputs/testing/",
+  										file = paste0("outputs/full_run_nov_2019/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
   																								temp_vec[i],
   																								"dev",
