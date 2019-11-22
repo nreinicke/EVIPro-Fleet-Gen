@@ -163,8 +163,6 @@ length(fleet_size_vec) *
 	length(temp_vec)
 ```
 
-
-
 Run the function that wraps the whole thing on each element in the list.
 
 ```{r message=FALSE}
@@ -172,14 +170,14 @@ Sys.time()
 
 getDoParName() # get parallel backend name
 getDoParWorkers() # get parallel backend workers (cores)
-# registerDoSEQ() # register default sequential / backup to unregister function
 
+registerDoSEQ() # register default sequential / backup to unregister function
  #lapply(temp_vec, function(temp) {
 for(i in 1:length(temp_vec)) {
 
 	# register the future each iteration of the for loop
 	# Using the DoParallel() instead of DoFuture() to try to stay within the foreach library of functions
-	registerDoParallel(cores = 4)
+	 registerDoParallel(cores = 4)
 	
 	# registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
 	# plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
@@ -230,7 +228,8 @@ for(i in 1:length(temp_vec)) {
   																											evi_load_profiles)
   
   rm(evi_load_profiles_suv)
-  
+
+  tracemem(evi_load_profiles)  
   gc()
   #Parallel sessions for permutations of all other variables
   fleet_load <-
@@ -271,7 +270,7 @@ for(i in 1:length(temp_vec)) {
             # add check for distribution of suvs and sedans
             # For some reason warnings aren't being displayed with this type of parallel processing
             # Testing within the functions show the ratio of suv/sedan to be preserved
-            warning(print(load_to_bind[, .(perc = .N / nrow(load_to_bind) * 100), by = vehicle_class]))
+         #   warning(print(load_to_bind[, .(perc = .N / nrow(load_to_bind) * 100), by = vehicle_class]))
             
             # Reduce fleet activity down to 24-hour aggregated load profile
             # Note: Remove this step, and reduce the number of variable permutations, to confirm imposed weight distributions, vehicle counts, etc.
@@ -343,7 +342,7 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   gc()
   
   # clean up backend
-  unregister()
+  # unregister()
   
   # adding a check on the memory usage at each iteration for testing
   # The memory should be roughly the same size each time
@@ -352,6 +351,116 @@ fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
 #})
 Sys.time()
 ```
+
+Rewriting as a futures parallel
+
+```{r}
+# create df of all vector options
+all_options <- data.table(expand.grid(numveh = fleet_size_vec,
+												pev = pev_type_vec,
+												dvmt = mean_dvmt_vec, 
+												home = home_power_vec, 
+												work = work_power_vec, 
+												loc = loc_class_vec, 
+												vclass = veh_class_vec, 
+												pref = pref_vec))
+
+# add ID column to split on
+all_options[, ID := seq(1:nrow(all_options))]
+
+
+# run loop for each temp vec
+lapply(temp_vec, function(temp) {
+
+  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp, ".rds"))
+  # add column for vehicle class
+  evi_raw[, "vehicle_class" := "Sedan"]
+  
+  # Repeat for SUVs
+  # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
+  # evi_raw_suv <- readRDS(evi_data_path_suv)
+		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp, ".rds"))
+  # add column for vehicle class
+  evi_raw_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to the unique vids to distinguish from sedan data
+  evi_raw_suv[, unique_vid := unique_vid + 100000000]
+  
+  # bind together into a single data.table
+  evi_raw <- rbind(evi_raw_suv,
+  																	evi_raw)
+  
+  rm(evi_raw_suv)
+    # load the load profiles
+  # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
+  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
+  
+  # add vehicle class
+  evi_load_profiles[, "vehicle_class" := "sedan"]
+  
+  # Repeat for SUVs
+  # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
+  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
+  # add vehicle class
+  evi_load_profiles_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to unique vid to distinguish SUV class of vehicle
+  evi_load_profiles_suv[, unique_vid := unique_vid + 100000000]
+  
+  # bind together into a single data.table
+  evi_load_profiles <- rbind(evi_load_profiles_suv,
+  																											evi_load_profiles)
+  
+  rm(evi_load_profiles_suv)
+
+  tracemem(evi_load_profiles)  
+  gc()
+  
+  # split all options list
+  all_options_list <- split(all_options, all_options$ID)
+  
+  # testing
+  options_list <- all_options_list[[1]]
+  
+  fleet_load <- future_lapply(all_options_list, function(options_list) {
+  	
+  	load_to_bind <- openEVI(evi_raw = evi_raw,
+  									evi_load_profiles = evi_load_profiles,
+  									fleet = options_list$numveh,
+  									pev = options_list$pev,
+  									dvmt = options_list$dvmt,
+  									pref = options_list$pref,
+  									home = options_list$home,
+  									work = options_list$work,
+  									loc = options_list$loc,
+  									vclass - options_list$vclass)
+
+  	
+  	## Need to determine how to name the permutations
+  	# probably a lookup table replace of some sort .. 
+  	 options_list$pev
+  	 # add columns to indicate variable permutations of this run
+            load_to_bind[, ':='(loc_class = loc,
+                                temp_c = temp,
+                                fleet_size = numveh,
+                                mean_dvmt = dvmt,
+                                pev_dist = pev,
+                                pref_dist = pref,
+                                home_access = strsplit(home,c("_"))[[1]][1],
+                                home_power_dist = strsplit(home,c("_"))[[1]][2],
+                                work_power_dist = work,
+            																				vehicle_class_dist = vclass)]
+  	
+  	
+  	 })
+ 
+})
+
+
+```
+
 
 Spot check the output
 
