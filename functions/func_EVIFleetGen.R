@@ -143,7 +143,7 @@ evi_fleetGen <- function(evi_raw,
 
   if( max(fleet_size_error) > 0.001 ) {
   
-  	if(any(fleet_size_error > .2)) {
+  	if(any(fleet_size_error > .3)) {
   		print(paste0("Warning: fleet size error of ",as.character(fleet_size_error),". Updating..."))
   	}
     
