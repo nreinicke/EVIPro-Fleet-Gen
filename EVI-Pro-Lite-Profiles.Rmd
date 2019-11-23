@@ -33,6 +33,16 @@ unregister <- function() {
   env <- foreach:::.foreachGlobals
   rm(list=ls(name=env), pos=env)
 }
+
+# retireive names from list
+getNames <- function(vec, option) {
+	# subset list to match given option	 
+	out <-	lapply(vec, function(x) {
+		 		x[all(x == unlist(option))]
+		 })
+	# filter out zero length lists
+		 return(names(Filter(length, out)))
+		 	}
 ```
 
 
@@ -368,7 +378,8 @@ all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 # add ID column to split on
 all_options[, ID := seq(1:nrow(all_options))]
 
-
+## testing
+temp <- temp_vec[[1]]
 # run loop for each temp vec
 lapply(temp_vec, function(temp) {
 
@@ -415,7 +426,7 @@ lapply(temp_vec, function(temp) {
   
   rm(evi_load_profiles_suv)
 
-  tracemem(evi_load_profiles)  
+  #tracemem(evi_load_profiles)  
   gc()
   
   # split all options list
@@ -440,7 +451,27 @@ lapply(temp_vec, function(temp) {
   	
   	## Need to determine how to name the permutations
   	# probably a lookup table replace of some sort .. 
-  	 options_list$pev
+
+  	# Create Names ----------------------------------------------------------------------- 
+		 
+  	# Match the options list with the named vector
+		 # PEV DIST
+  	 pev <- lapply(pev_type_vec, function(x) {
+		 	x[x %in% unlist(options_list$pev)]
+		 	})
+			# filter out length zero lists
+		 pev <- names(Filter(length, pev))
+  	
+		 # Charge Preference
+		 pref <- lapply(home_power_vec, function(x) {
+		 	x[x == options_list$home[[1]]]
+		 })
+		 pref <- names(Filter(length, pref))
+		 
+		 
+		 getNames(pref_vec, options_list$pref)
+		 
+		 options_list$numveh
   	 # add columns to indicate variable permutations of this run
             load_to_bind[, ':='(loc_class = loc,
                                 temp_c = temp,
@@ -453,12 +484,28 @@ lapply(temp_vec, function(temp) {
                                 work_power_dist = work,
             																				vehicle_class_dist = vclass)]
   	
-  	
+load_to_bind <- data.table(t = rnorm(100, 1, 1),
+																											v = rnorm(100, 1, 1))
+            load_to_bind[, ':=' (loc_class = options_list$loc[[1]],
+            																					temp_c = temp,
+            																					fleet_size = options_list$numveh[[1]],
+            																					mean_dvmt = options_list$dvmt,
+            																					pev_dist = getNames(pev_type_vec, options_list$pev),
+            																					perf_dist = getNames(pref_vec, options_list$pref),
+            																					home_access = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][1],
+            																					home_power_dist = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][2]
+            													)]
+            
+    load_to_bind        
   	 })
  
 })
 
+	
+home <-
+ getNames(home_power_vec, options_list$home)
 
+strsplit(home, "_")[[1]][1]
 ```
 
 
