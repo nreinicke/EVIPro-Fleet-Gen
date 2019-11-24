@@ -433,7 +433,7 @@ lapply(temp_vec, function(temp) {
   all_options_list <- split(all_options, all_options$ID)
   
   # testing
-  options_list <- all_options_list[[1]]
+ # options_list <- all_options_list[[1]]
   
   fleet_load <- future_lapply(all_options_list, function(options_list) {
   	
