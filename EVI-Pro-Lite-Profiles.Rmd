@@ -451,7 +451,7 @@ lapply(temp_vec, function(temp) {
 # load_to_bind <- data.table(t = rnorm(100, 1, 1),
 # 																											v = rnorm(100, 1, 1))
 # Create Names ----------------------------------------------------------------------- 
-            load_to_bind[, ':=' (# loc_class = options_list$loc[[1]],
+            load_to_bind[, ':=' ( loc_class = options_list$loc[[1]],
             																					temp_c = temp,
             																					fleet_size = options_list$numveh[[1]],
             																					mean_dvmt = options_list$dvmt,
