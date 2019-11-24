@@ -440,72 +440,89 @@ lapply(temp_vec, function(temp) {
   	load_to_bind <- openEVI(evi_raw = evi_raw,
   									evi_load_profiles = evi_load_profiles,
   									fleet = options_list$numveh,
-  									pev = options_list$pev,
+  									pev = unlist(options_list$pev),
   									dvmt = options_list$dvmt,
-  									pref = options_list$pref,
-  									home = options_list$home,
-  									work = options_list$work,
+  									pref = unlist(options_list$pref),
+  									home = unlist(options_list$home),
+  									work = unlist(options_list$work),
   									loc = options_list$loc,
-  									vclass - options_list$vclass)
+  									veh_class = unlist(options_list$vclass))
 
-  	
-  	## Need to determine how to name the permutations
-  	# probably a lookup table replace of some sort .. 
-
-  	# Create Names ----------------------------------------------------------------------- 
-		 
-  	# Match the options list with the named vector
-		 # PEV DIST
-  	 pev <- lapply(pev_type_vec, function(x) {
-		 	x[x %in% unlist(options_list$pev)]
-		 	})
-			# filter out length zero lists
-		 pev <- names(Filter(length, pev))
-  	
-		 # Charge Preference
-		 pref <- lapply(home_power_vec, function(x) {
-		 	x[x == options_list$home[[1]]]
-		 })
-		 pref <- names(Filter(length, pref))
-		 
-		 
-		 getNames(pref_vec, options_list$pref)
-		 
-		 options_list$numveh
-  	 # add columns to indicate variable permutations of this run
-            load_to_bind[, ':='(loc_class = loc,
-                                temp_c = temp,
-                                fleet_size = numveh,
-                                mean_dvmt = dvmt,
-                                pev_dist = pev,
-                                pref_dist = pref,
-                                home_access = strsplit(home,c("_"))[[1]][1],
-                                home_power_dist = strsplit(home,c("_"))[[1]][2],
-                                work_power_dist = work,
-            																				vehicle_class_dist = vclass)]
-  	
-load_to_bind <- data.table(t = rnorm(100, 1, 1),
-																											v = rnorm(100, 1, 1))
-            load_to_bind[, ':=' (loc_class = options_list$loc[[1]],
+# load_to_bind <- data.table(t = rnorm(100, 1, 1),
+# 																											v = rnorm(100, 1, 1))
+# Create Names ----------------------------------------------------------------------- 
+            load_to_bind[, ':=' (# loc_class = options_list$loc[[1]],
             																					temp_c = temp,
             																					fleet_size = options_list$numveh[[1]],
             																					mean_dvmt = options_list$dvmt,
             																					pev_dist = getNames(pev_type_vec, options_list$pev),
             																					perf_dist = getNames(pref_vec, options_list$pref),
-            																					home_access = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][1],
-            																					home_power_dist = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][2]
-            													)]
+            																					home_access = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][1], # confirm naming convention for this, currently does not fully represent what is happening in permmutation
+            																					home_power_dist = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][2],
+            																					work_power_vec = getNames(work_power_vec, options_list$work),
+            																					vehicle_class_dist = getNames(veh_class_vec, options_list$vclass)
+            													)] # end add naming columns
+  	
+  	# summarize data based on distinct options
+  	 load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24]
+            load_to_bind <- load_to_bind[, .(kw = sum(avg_kw)),
+                                         by = c(# "loc_class",
+                                                "temp_c",
+                                                "fleet_size",
+                                                "mean_dvmt",
+                                                "pev_dist",
+                                                "pref_dist",
+                                                "home_access",
+                                                "home_power_dist",
+                                                "work_power_dist",
+                                                "day_of_week",
+                                                "pev_type", 
+                                                "dest_type", 
+                                                "dest_chg_level",
+                                                "time_of_day",
+                                         							"vehicle_class_dist")]
+            setkey(load_to_bind,
+            							loc_class,
+            							temp_c,
+            							fleet_size,
+            							mean_dvmt,
+            							pev_dist,
+            							pref_dist,
+            							home_access,
+            							home_power_dist,
+            							work_power_dist,
+            							day_of_week,
+            							pev_type,
+            							dest_type,
+            							dest_chg_level,
+            							time_of_day)
             
-    load_to_bind        
-  	 })
+            gc()
+            
+            return(load_to_bind)
+  	 }) # end of future apply
  
-})
+ fleet_load <- rbindlist(fleet_load)
+  
+ # Change data types --------------------------------------------------------------------------------- 
+	#change temp, fleet size, dvmt to integer
+ fleet_load$temp_c  <-
+	as.integer(gsub("C", "", fleet_load$temp_c))
 
+	# convert other columns to integer
+	fleet_load[, fleet_size := as.integer(fleet_size)]
+	fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
+ 
 	
-home <-
- getNames(home_power_vec, options_list$home)
-
-strsplit(home, "_")[[1]][1]
+	# Save output ----------------------------------------------------------------------------------------
+	#Write fleet_load out to disk
+  fwrite(fleet_load,
+  										file = paste0("outputs/full_run_nov_2019/",
+  																								gsub("-", "", Sys.Date()), "_", # date the run
+  																								temp_vec[i],
+  																								"dev",
+  																								".csv"))
+}) # end of temp vec lapply
 ```
 
 
