@@ -17,23 +17,10 @@
 #   1.0: JKC added language to header and added comments.
 #   2.0: JKC restructured to allow for embedded parallelization and looping through permutations of weights
 
-# source function scripts
-source("functions/func_joinOn.R") #Fast join function
-source("functions/func_strEval.R") #String evulation function
-source("functions/func_pp.R") #Alias for paste
-source("functions/func_LoadEVIPro.R") #loads EVIPro data and stores in a single data table
-source("functions/func_EVIFleetGen.R") #Generates a fleet of EVIPro vids
-source("functions/func_calcBaseEVILoad.R") #Pre-calculates load profile for all unique_vid in evi_raw
-source("functions/func_measureFleetWeights.R") #Creates statistics of generated fleet
-source("functions/func_LoadFleetWeights.R") #Loads .csv file where fleet characteristic weights are stored
-source("functions/func_GenVmtWeights.R") #Generates vmt distribution for fleet generation
-source("functions/func_CreateFleetWeights.R") #Creates fleet weights from values hard coded in this function.
-source("functions/func_GenFleetProfiles.R") #Creates 48-hour load profile for the resulting fleet
+# library(data.table)
 
-library(data.table)
-
-openEVI <- function(evi_raw,
-                    evi_load_profiles,# making these variable explicit
+openEVI <- function(temp,
+                   # evi_load_profiles,# making these variable explicit
                     #temp = "-20C", # varied in for loop
                     fleet = c(1000),
                     pev = c(0.25,0.25,0.25,0.25),
@@ -44,6 +31,8 @@ openEVI <- function(evi_raw,
                     loc_class = "urban",
 																				veh_class) { # additional var here for sedan/suv
   
+	 evi_raw <- loadRawData(temp)
+	
   #Create data table of fleet weights that will work with evi_fleetGen()
   fleet_weights <- create_fleet_weights(pev, # change for suvs
                                         pref,
@@ -61,12 +50,12 @@ openEVI <- function(evi_raw,
                             loc_class = loc_class)
   
   #Create 24-hour load profile for the fleet
-  evi_fleet_prof <- get_fleet_profiles(evi_fleet, 
-  																																					fleet, 
-  																																					evi_load_profiles)
+  # evi_fleet_prof <- get_fleet_profiles(evi_fleet, 
+  # 																																					fleet, 
+  # 																																					evi_load_profiles)
   
   #Return just the fleet load profile. Ignore the fleet activity and fleet stats for the iterative generation of load profiles for NREL
-  return(evi_fleet_prof)
-  
+  # return(evi_fleet_prof)
+  return(evi_fleet$data)
 }
 
