@@ -42,7 +42,9 @@ getNames <- function(vec, option) {
 		 })
 	# filter out zero length lists
 		 return(names(Filter(length, out)))
-		 	}
+}
+
+source("functions/loadRawData.R")
 ```
 
 
@@ -72,7 +74,7 @@ pev_type_vec <- list("BEV100" = c(0, 0, .30, .70))
 veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2))
 loc_class_vec <- list("urban")
 home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0))
-work_power_vec <- list("L2_80" = c(0, 0.8))
+work_power_vec <- list("L2_80" = c(0.2, 0.8))
 pref_vec <- list("Home100" = c(1.0, 0.0))
 
 # I want temp to be length > 1
@@ -147,7 +149,7 @@ home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0), #100% access to home po
 
 # Work power
 work_power_vec <- list(
-	"L2_80" = c(0, 0.8),
+	"L2_80" = c(0.2, 0.8),
 	"L2_50" = c(0.5, 0.5),
 	"L2_20" = c(0.8, 0.2)
 	)
@@ -365,6 +367,9 @@ Sys.time()
 Rewriting as a futures parallel
 
 ```{r}
+#Set max RAM allowed for global variables to 10GB
+# options(future.globals.maxSize = 25000 * 1024^2)
+
 # create df of all vector options
 all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 												pev = pev_type_vec,
@@ -379,67 +384,35 @@ all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 all_options[, ID := seq(1:nrow(all_options))]
 
 ## testing
-temp <- temp_vec[[1]]
+# temp <- temp_vec[[4]]
 # run loop for each temp vec
 lapply(temp_vec, function(temp) {
 
-  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp, ".rds"))
-  # add column for vehicle class
-  evi_raw[, "vehicle_class" := "Sedan"]
-  
-  # Repeat for SUVs
-  # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
-  # evi_raw_suv <- readRDS(evi_data_path_suv)
-		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp, ".rds"))
-  # add column for vehicle class
-  evi_raw_suv[, "vehicle_class" := "SUV"]
-  
-  # add one hundred million to the unique vids to distinguish from sedan data
-  evi_raw_suv[, unique_vid := unique_vid + 100000000]
-  
-  # bind together into a single data.table
-  evi_raw <- rbind(evi_raw_suv,
-  																	evi_raw)
-  
-  rm(evi_raw_suv)
-    # load the load profiles
-  # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
-  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
-  
-  # add vehicle class
-  evi_load_profiles[, "vehicle_class" := "sedan"]
-  
-  # Repeat for SUVs
-  # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
-  # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
-  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
-  # add vehicle class
-  evi_load_profiles_suv[, "vehicle_class" := "SUV"]
-  
-  # add one hundred million to unique vid to distinguish SUV class of vehicle
-  evi_load_profiles_suv[, unique_vid := unique_vid + 100000000]
-  
-  # bind together into a single data.table
-  evi_load_profiles <- rbind(evi_load_profiles_suv,
-  																											evi_load_profiles)
-  
-  rm(evi_load_profiles_suv)
-
-  #tracemem(evi_load_profiles)  
-  gc()
+	# time testing
+	start <- Sys.time()
+	
+	# load raw data and load profiles
+	## I think this is the memory suck maybe look into the ff package for reading and storing data structures
+	# raw_data <- list()
+	raw_data <- loadRawData(temp)
   
   # split all options list
   all_options_list <- split(all_options, all_options$ID)
   
   # testing
-  options_list <- all_options_list[[1]]
+  # options_list <- all_options_list[[1]]
+
+  # set workers
+  # plan(multiprocess, workers = 3, gc = T)
   
-  fleet_load <- future_lapply(all_options_list, function(options_list) {
+  fleet_load <- lapply(all_options_list, function(options_list) {
   	
-  	load_to_bind <- openEVI(evi_raw = evi_raw,
-  									evi_load_profiles = evi_load_profiles,
-  									fleet = options_list$numveh,
+  	# load_to_bind <- 
+  		fleet_sub <-
+  		openEVI(
+  									evi_raw = raw_data[[1]],
+  									#evi_load_profiles = evi_load_profiles,
+  									fleet = unlist(options_list$numveh),
   									pev = unlist(options_list$pev),
   									dvmt = options_list$dvmt,
   									pref = unlist(options_list$pref),
@@ -448,18 +421,26 @@ lapply(temp_vec, function(temp) {
   									loc = options_list$loc,
   									veh_class = unlist(options_list$vclass))
 
-# load_to_bind <- data.table(t = rnorm(100, 1, 1),
-# 																											v = rnorm(100, 1, 1))
+  	# test out change function location	
+  	load_to_bind <- get_fleet_profiles(fleet_sub,
+  																																					unlist(options_list$numveh),
+  																																					raw_data[[2]])
 # Create Names ----------------------------------------------------------------------- 
-            load_to_bind[, ':=' ( loc_class = options_list$loc[[1]],
+  	        load_to_bind[, ':=' (# loc_class = options_list$loc[[1]],
             																					temp_c = temp,
             																					fleet_size = options_list$numveh[[1]],
             																					mean_dvmt = options_list$dvmt,
             																					pev_dist = getNames(pev_type_vec, options_list$pev),
-            																					perf_dist = getNames(pref_vec, options_list$pref),
-            																					home_access = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][1], # confirm naming convention for this, currently does not fully represent what is happening in permmutation
-            																					home_power_dist = strsplit(getNames(home_power_vec, options_list$home), "_")[[1]][2],
-            																					work_power_vec = getNames(work_power_vec, options_list$work),
+            																					pref_dist = getNames(pref_vec, options_list$pref),
+            																					# split home access vector, select first element, home access
+            																					home_access = regmatches(getNames(home_power_vec, options_list$home),
+            																																													regexpr("_", getNames(home_power_vec, options_list$home)),
+            																																													invert = T)[[1]][1],
+            																					# split home access vector, select second element, home power distribution 
+            																					home_power_dist = regmatches(getNames(home_power_vec, options_list$home),
+            																																																		regexpr("_", getNames(home_power_vec, options_list$home)),
+            																																																		invert = T)[[1]][2],
+            																					work_power_dist = getNames(work_power_vec, options_list$work),
             																					vehicle_class_dist = getNames(veh_class_vec, options_list$vclass)
             													)] # end add naming columns
   	
@@ -482,7 +463,7 @@ lapply(temp_vec, function(temp) {
                                                 "time_of_day",
                                          							"vehicle_class_dist")]
             setkey(load_to_bind,
-            							loc_class,
+            							#loc_class,
             							temp_c,
             							fleet_size,
             							mean_dvmt,
@@ -497,18 +478,21 @@ lapply(temp_vec, function(temp) {
             							dest_chg_level,
             							time_of_day)
             
-            gc()
+            # gc()
             
             return(load_to_bind)
   	 }) # end of future apply
  
+  # bind results together
  fleet_load <- rbindlist(fleet_load)
   
+ # remove large objects
+	#gc(rm(raw_data))
+ 
  # Change data types --------------------------------------------------------------------------------- 
 	#change temp, fleet size, dvmt to integer
- fleet_load$temp_c  <-
-	as.integer(gsub("C", "", fleet_load$temp_c))
-
+	fleet_load[, temp_c := as.integer(gsub("C", "", temp_c))]
+ 
 	# convert other columns to integer
 	fleet_load[, fleet_size := as.integer(fleet_size)]
 	fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
@@ -519,16 +503,27 @@ lapply(temp_vec, function(temp) {
   fwrite(fleet_load,
   										file = paste0("outputs/full_run_nov_2019/",
   																								gsub("-", "", Sys.Date()), "_", # date the run
-  																								temp_vec[i],
-  																								"dev",
+  																								temp,
+  																								"_",
   																								".csv"))
+  
+	print(Sys.time() - start)
+	gc(rm(raw_data))
+	
+#	.rs.restartR()
+	.rs.api.restartSession() # restart R session, should clear memory usage
 }) # end of temp vec lapply
+
+
+all_options
 ```
 
 
 Spot check the output
 
 ```{r}
+
+mallinfo?
 # remove residual data usage
 gc(full = T)
 
