@@ -19,7 +19,7 @@
 
 # library(data.table)
 
-openEVI <- function(temp,
+openEVI <- function(evi_raw,
                    # evi_load_profiles,# making these variable explicit
                     #temp = "-20C", # varied in for loop
                     fleet = c(1000),
@@ -31,7 +31,7 @@ openEVI <- function(temp,
                     loc_class = "urban",
 																				veh_class) { # additional var here for sedan/suv
   
-	 evi_raw <- loadRawData(temp)
+	 #evi_raw <- loadRawData(temp)
 	
   #Create data table of fleet weights that will work with evi_fleetGen()
   fleet_weights <- create_fleet_weights(pev, # change for suvs
