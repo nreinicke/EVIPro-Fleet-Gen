@@ -21,7 +21,7 @@ loadRawData <- function(temp) {
 					# list approach
 					evi_raw_dt <- rbindlist(list(evi_raw, evi_raw_suv))
 				
-					return(raw_dt)
+					return(evi_raw_dt)
 					# gc(rm(evi_raw_suv, evi_raw))
 					# load the load profiles
 					# loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
