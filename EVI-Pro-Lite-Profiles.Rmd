@@ -189,7 +189,7 @@ for(i in 1:length(temp_vec)) {
 
 	# register the future each iteration of the for loop
 	# Using the DoParallel() instead of DoFuture() to try to stay within the foreach library of functions
-	 registerDoParallel(cores = 4)
+	 registerDoParallel(cores = 3)
 	
 	# registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
 	# plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
@@ -405,9 +405,9 @@ lapply(temp_vec, function(temp) {
   # options_list <- all_options_list[[1]]
 
   # set workers
-  # plan(multiprocess, workers = 3, gc = T)
+  plan(multiprocess, workers = 3, gc = T)
   
-  fleet_load <- lapply(all_options_list, function(options_list) {
+  fleet_load <- future_lapply(all_options_list, function(options_list) {
   	
   	# load_to_bind <- 
   		fleet_sub <-
