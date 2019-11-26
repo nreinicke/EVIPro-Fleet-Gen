@@ -9,10 +9,10 @@
 
 get_fleet_profiles <- function(evi_fleet, 
 																															fleet_size, 
-																															temp) {
+																															load_profile) {
   
 		# Load load profiles
-		load_profile <- loadProfiles(temp)
+	#	load_profile <- loadProfiles(temp)
   
 		# calculate fleet size scale
   if(fleet_size > 50000) {
