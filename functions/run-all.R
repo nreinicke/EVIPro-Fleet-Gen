@@ -1,4 +1,8 @@
 
+
+
+# Libraries ---------------------------------------------------------------
+
 library(future.apply)
 library(ggplot2)
 library(data.table)
@@ -138,6 +142,9 @@ all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 # add ID column to split on
 all_options[, ID := seq(1:nrow(all_options))]
 
+# Number of iterations; full run is 81648
+nrow(all_options) * 2
+
 ## testing
 # temp <- temp_vec[[4]]
 # run loop for each temp vec
@@ -145,13 +152,6 @@ lapply(temp_vec, function(temp) {
 	
 	# time testing
 	start <- Sys.time()
-	
-	# load raw data and load profiles
-	## I think this is the memory suck maybe look into the ff package for reading and storing data structures
-	## Things to try
-	
-	# raw_data <- list()
-
 	
 	# split all options list
 	all_options_list <- split(all_options, all_options$ID)
@@ -167,7 +167,7 @@ lapply(temp_vec, function(temp) {
 		# load_to_bind <- 
 		fleet_sub <-
 			openEVI(
-				evi_raw = temp,
+				temp = temp,
 				#evi_load_profiles = evi_load_profiles,
 				fleet = unlist(options_list$numveh),
 				pev = unlist(options_list$pev),
@@ -203,6 +203,10 @@ lapply(temp_vec, function(temp) {
 			vehicle_class_dist = getNames(veh_class_vec, options_list$vclass)
 		)] # end add naming columns
 		
+
+		# Summarize Data ----------------------------------------------------------
+
+		
 		# summarize data based on distinct options
 		load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24]
 		load_to_bind <- load_to_bind[, .(kw = sum(avg_kw)),
@@ -237,8 +241,7 @@ lapply(temp_vec, function(temp) {
 									dest_chg_level,
 									time_of_day)
 		
-		# gc()
-		
+
 		return(load_to_bind)
 	}) # end of future apply
 	
@@ -270,10 +273,10 @@ lapply(temp_vec, function(temp) {
 	gc(rm(raw_data), reset = T, full = T)
 	
 	#	.rs.restartR()
-	#.rs.api.restartSession() # restart R session, should clear memory usage
+	# .rs.api.restartSession() # restart R session, should clear memory usage
 }) # end of temp vec lapply
 
-library(rstudioapi)
+# library(rstudioapi)
 
 # restart the r session and run a command upon restart
 #rstudioapi::restartSession(command = source("functions/loadRawData.R"))
