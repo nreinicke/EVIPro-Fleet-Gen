@@ -393,6 +393,8 @@ lapply(temp_vec, function(temp) {
 	
 	# load raw data and load profiles
 	## I think this is the memory suck maybe look into the ff package for reading and storing data structures
+	## Things to try
+	
 	# raw_data <- list()
 	raw_data <- loadRawData(temp)
   
@@ -511,7 +513,7 @@ lapply(temp_vec, function(temp) {
 	gc(rm(raw_data))
 	
 #	.rs.restartR()
-	.rs.api.restartSession() # restart R session, should clear memory usage
+#	.rs.api.restartSession() # restart R session, should clear memory usage
 }) # end of temp vec lapply
 
 
