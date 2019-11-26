@@ -145,6 +145,9 @@ all_options[, ID := seq(1:nrow(all_options))]
 # Number of iterations; full run is 81648
 nrow(all_options) * 2
 
+#Set max RAM allowed for global variables to 10GB
+options(future.globals.maxSize = 25000 * 1024^2)
+
 ## testing
 # temp <- temp_vec[[4]]
 # run loop for each temp vec
@@ -158,6 +161,9 @@ lapply(temp_vec, function(temp) {
 	
 	# testing
 	# options_list <- all_options_list[[1]]
+
+	# load big data
+	raw_data <- loadRawData(temp)
 	
 	# set workers
 	# plan(multiprocess, workers = 3, gc = T)
@@ -167,7 +173,7 @@ lapply(temp_vec, function(temp) {
 		# load_to_bind <- 
 		fleet_sub <-
 			openEVI(
-				temp = temp,
+				evi_raw = raw_data[[1]],
 				#evi_load_profiles = evi_load_profiles,
 				fleet = unlist(options_list$numveh),
 				pev = unlist(options_list$pev),
@@ -181,7 +187,7 @@ lapply(temp_vec, function(temp) {
 		# test out change function location	
 		load_to_bind <- get_fleet_profiles(fleet_sub,
 																																					unlist(options_list$numveh),
-																																					temp)
+																																					raw_data[[2]])
 		
 		# Create Names ----------------------------------------------------------------------- 
 		
