@@ -51,21 +51,16 @@ source("functions/func_GenFleetProfiles.R") #Creates 48-hour load profile for th
 # Load Vectors ------------------------------------------------------------
 
 # count of total number of PEVs
-fleet_size_vec <- list(500,
+fleet_size_vec <- list(
 																							1000,
-																							2500,
-																							5000,
 																							10000,
-																							20000,
 																							50000) 
 
 # average daily miles traveled per vehicle
-mean_dvmt_vec <- c(15,
-																			20,
+mean_dvmt_vec <- c(
 																			25,
 																			35,
-																			45,
-																			50) 
+																			45) 
 
 # Temperature
 temp_vec <- c("-20C", # celsius
@@ -78,7 +73,7 @@ temp_vec <- c("-20C", # celsius
 ) 
 
 # PEV Type (confirm the meaning of the labels) (def named wrong)
-pev_type_vec <- list("BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
+pev_type_vec <- list(# "BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
 																					"BEV_DOM" = c(.10, .15, .25, .50), # BEV Dominant
 																					"PHEV_DOM" = c(.25, .50, .10, .15), # PHEV Dominant
 																					"EQUAL_DIST" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
@@ -125,7 +120,6 @@ pref_vec <- list(
 
 # Run loop ----------------------------------------------------------------
 
-
 #Set max RAM allowed for global variables to 10GB
 # options(future.globals.maxSize = 25000 * 1024^2)
 
@@ -149,7 +143,7 @@ nrow(all_options) * 2
 options(future.globals.maxSize = 25000 * 1024^2)
 
 ## testing
-# temp <- temp_vec[[4]]
+ temp_vec <- temp_vec[[1]]
 # run loop for each temp vec
 lapply(temp_vec, function(temp) {
 	
@@ -166,9 +160,9 @@ lapply(temp_vec, function(temp) {
 	raw_data <- loadRawData(temp)
 	
 	# set workers
-	# plan(multiprocess, workers = 3, gc = T)
+	plan(multiprocess, workers = 4, gc = T)
 	
-	fleet_load <- lapply(all_options_list, function(options_list) {
+	fleet_load <- future_lapply(all_options_list, function(options_list) {
 		
 		# load_to_bind <- 
 		fleet_sub <-
