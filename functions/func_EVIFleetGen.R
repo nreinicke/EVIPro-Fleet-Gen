@@ -76,7 +76,7 @@ evi_fleetGen <- function(evi_raw,
   																									"power_home", 
   																									"power_work",
   																									"schedule_vmt_bin",
-  																									"vehicle_class")  
+  																									"class_type")  
   
   
   #Calculate total weight for each permutation of groups
@@ -102,7 +102,7 @@ evi_fleetGen <- function(evi_raw,
   all_perms[, pev_type := factor(pev_type, levels=c("PHEV20","PHEV50","BEV100","BEV250"))]
 
   # factor the vehicle class
-		all_perms[, vehicle_class := factor(vehicle_class, levels = c("Sedan",
+		all_perms[, class_type := factor(class_type, levels = c("Sedan",
 																																																																"SUV"))]
   ################################################################################################################################
   #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
@@ -124,7 +124,7 @@ evi_fleetGen <- function(evi_raw,
               							"preferred_loc",
               							"pev_type",
               							"schedule_vmt_bin",
-              							"vehicle_class")]
+              							"class_type")]
   
   # partition schedule_vmt_bin to actual mileage bins and day of week indicators
   # recast schedule_vmt_bin to integer
@@ -180,7 +180,7 @@ evi_fleetGen <- function(evi_raw,
   																			"preferred_loc",
   																			"pev_type",
   																			"schedule_vmt_bin",
-  																			"vehicle_class"))
+  																			"class_type"))
   
   setkeyv(fleet, c("day_of_week",
   																	"power_work",
@@ -188,7 +188,7 @@ evi_fleetGen <- function(evi_raw,
   																	"preferred_loc",
   																	"pev_type",
   																	"schedule_vmt_bin",
-  																	"vehicle_class"))
+  																	"class_type"))
   
   # Add VIDs to fleet[]
   # stat weight gets dropped here
@@ -211,9 +211,9 @@ evi_fleetGen <- function(evi_raw,
   # Note: when using vmt_weights, this only works if there are matching labels for evi_raw[,schedule_vmt_bin] and fleet[,schedule_vmt_bin]. This
   #     only makes sense if the bin widths used for the two data tables are equal.
   # TODO
-  # it seems like I would want vehicle_class here
-  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class", "unique_vid"))
-  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "vehicle_class", "unique_vid"))
+  # it seems like I would want class_type here
+  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
+  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
   
   # Merge charge events with fleet
   # Getting duplicate fleet_ids on this, this is due to multiple charging events in a given day by the same vehicle
