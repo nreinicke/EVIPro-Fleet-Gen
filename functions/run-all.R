@@ -74,14 +74,14 @@ temp_vec <- c("-20C", # celsius
 
 # PEV Type (confirm the meaning of the labels) (def named wrong)
 pev_type_vec <- list(# "BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
-																					"BEV_DOM" = c(.10, .15, .25, .50), # BEV Dominant
-																					"PHEV_DOM" = c(.25, .50, .10, .15), # PHEV Dominant
-																					"EQUAL_DIST" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
+																					"BEV" = c(.10, .15, .25, .50), # BEV Dominant
+																					"PHEV" = c(.25, .50, .10, .15), # PHEV Dominant
+																					"EQUAL" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
 
 # adding the vehicle class variable
-veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
-																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
-																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
+veh_class_vec <- list("Sedan" = c(0.8, 0.2), # sedan dominant
+																						"Equal" = c(0.5, 0.5), # equal distribution
+																						"SUV" = c(0.2, 0.8)) # suv dominant
 
 # Geography
 loc_class_vec <- list("urban")
@@ -90,24 +90,24 @@ loc_class_vec <- list("urban")
 # c(Weekday, Weekend)
 
 # Home Access and Power 																# L1, L2, % without access to home power 
-home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0), #100% access to home power, 80% of those L1
-																							"HA100_L2_80" = c(0.20, 0.80, 0), #100% access to home power, 80% of those L2
-																							"HA100_L2_50" = c(0.5, 0.5, 0), #100% access to home power, 50% of those L2
-																							"HA75_L2_20" = c(0.6, 0.15, 0.25), #75% access to home power, 80% of those L1
-																							"HA75_L2_80" = c(0.15, 0.6, 0.25), #75% access to home power, 80% of those L2
-																							"HA75_L2_50" = c(0.375, 0.375, 0.25), #75% access to home power, 50% of those L2
-																							"HA50_L2_20" = c(0.4, 0.1, 0.5), #50% access to home power, 80% of those L1
-																							"HA50_L2_80" = c(0.1, 0.4, 0.5), #50% access to home power, 80% of those L2
-																							"HA50_L2_50" = c(0.25, 0.25, 0.5)) #50% access to home power, 50% of those L2
+home_power_vec <- list("HA100_MostL1" = c(0.80, 0.20, 0), #100% access to home power, 80% of those L1
+																							"HA100_MostL2" = c(0.20, 0.80, 0), #100% access to home power, 80% of those L2
+																							"HA100_Equal" = c(0.5, 0.5, 0), #100% access to home power, 50% of those L2
+																							"HA75_MostL1" = c(0.6, 0.15, 0.25), #75% access to home power, 80% of those L1
+																							"HA75_MostL2" = c(0.15, 0.6, 0.25), #75% access to home power, 80% of those L2
+																							"HA75_Equal" = c(0.375, 0.375, 0.25), #75% access to home power, 50% of those L2
+																							"HA50_MostL1" = c(0.4, 0.1, 0.5), #50% access to home power, 80% of those L1
+																							"HA50_MostL2" = c(0.1, 0.4, 0.5), #50% access to home power, 80% of those L2
+																							"HA50_Equal" = c(0.25, 0.25, 0.5)) #50% access to home power, 50% of those L2
 
 # drop all L2 cases, replace with 50/50 split
 # make these an 80/20 split
 
 # Work power
 work_power_vec <- list(
-	"L2_80" = c(0.2, 0.8),
-	"L2_50" = c(0.5, 0.5),
-	"L2_20" = c(0.8, 0.2)
+	"MostL2" = c(0.2, 0.8),
+	"Equal" = c(0.5, 0.5),
+	"MostL1" = c(0.8, 0.2)
 )
 
 # Home work preference
@@ -142,8 +142,9 @@ nrow(all_options) * 2
 #Set max RAM allowed for global variables to 10GB
 options(future.globals.maxSize = 25000 * 1024^2)
 
-## testing
- temp_vec <- temp_vec[[1]]
+## testing -----------------------
+temp_vec <- temp_vec[[1]]
+ 
 # run loop for each temp vec
 lapply(temp_vec, function(temp) {
 	
@@ -153,8 +154,8 @@ lapply(temp_vec, function(temp) {
 	# split all options list
 	all_options_list <- split(all_options, all_options$ID)
 	
-	# testing
-	# options_list <- all_options_list[[1]]
+	# testing -------------------------
+	options_list <- all_options_list[[1]]
 
 	# load big data
 	raw_data <- loadRawData(temp)
@@ -192,7 +193,7 @@ lapply(temp_vec, function(temp) {
 			pev_dist = getNames(pev_type_vec, options_list$pev),
 			pref_dist = getNames(pref_vec, options_list$pref),
 			# split home access vector, select first element, home access
-			home_access = regmatches(getNames(home_power_vec, options_list$home),
+			home_access_dist = regmatches(getNames(home_power_vec, options_list$home),
 																												regexpr("_", getNames(home_power_vec, options_list$home)),
 																												invert = T)[[1]][1],
 			# split home access vector, select second element, home power distribution 
@@ -200,7 +201,7 @@ lapply(temp_vec, function(temp) {
 																																regexpr("_", getNames(home_power_vec, options_list$home)),
 																																invert = T)[[1]][2],
 			work_power_dist = getNames(work_power_vec, options_list$work),
-			vehicle_class_dist = getNames(veh_class_vec, options_list$vclass)
+			class_dist = getNames(veh_class_vec, options_list$vclass)
 		)] # end add naming columns
 		
 
@@ -216,15 +217,17 @@ lapply(temp_vec, function(temp) {
 																																"mean_dvmt",
 																																"pev_dist",
 																																"pref_dist",
-																																"home_access",
+																																"home_access_dist",
 																																"home_power_dist",
 																																"work_power_dist",
+																																"class_dist",
 																																"day_of_week",
 																																"pev_type", 
 																																"dest_type", 
 																																"dest_chg_level",
-																																"time_of_day",
-																																"vehicle_class_dist")]
+																																"class_type",
+																																"time_of_day"
+																																)]
 		setkey(load_to_bind,
 									#loc_class,
 									temp_c,
