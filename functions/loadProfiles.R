@@ -4,7 +4,7 @@ loadProfiles <- function(temp) {
 	evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
 	
 	# add vehicle class
-	evi_load_profiles[, "vehicle_class" := "sedan"]
+	evi_load_profiles[, "vehicle_class" := "Sedan"]
 	
 	# Repeat for SUVs
 	evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp, ".rds"))
