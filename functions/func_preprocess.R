@@ -19,7 +19,7 @@
 # The working directory is now required to be set for all function calls
 
 # set wd
-setwd("/media/spin/sein-evi/source/NREL-Demo_Project")
+# setwd("/media/spin/sein-evi/source/NREL-Demo_Project")
 #######################
 
 # load necessary packages
@@ -43,7 +43,7 @@ temp_list <- paste0(temp_list, "C")
 future_lapply(seq(1:length(temp_list)), function(i) {
   # load the raw data
   evi_raw <- load_EVIPro("../../data/sessions_all_ambient_temps_suv/", # suv
-                         temp_list[i], 
+                        temp_list[i], 
                          "../../data/chts_dvmt.csv", # path change
                          10)
   saveRDS(evi_raw, paste0("../../data/preprocessed/evi_raw_suv/", # suv
