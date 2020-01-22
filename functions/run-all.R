@@ -146,7 +146,7 @@ options(future.globals.maxSize = 25000 * 1024^2)
 works <- 3
 
 ## testing -----------------------
-temp_vec <- temp_vec[3:4]
+temp_vec <- temp_vec[4:length(temp_vec)]
  
 
 # Run loop ----------------------------------------------------------------
