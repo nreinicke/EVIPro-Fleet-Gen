@@ -12,10 +12,14 @@ library(doFuture)
 library(doParallel)
 
 # helper
-unregister <- function() {
-	env <- foreach:::.foreachGlobals
-	rm(list=ls(name=env), pos=env)
-}
+# unregister <- function() {
+# 	env <- foreach:::.foreachGlobals
+# 	rm(list=ls(name=env), pos=env)
+# }
+
+# Set this option to unsure correct parallelization behaviour
+# This is a known issue and will be investigated at a later date
+options(future.fork.enable = T)
 
 # retireive names from list
 getNames <- function(vec, option) {
@@ -117,11 +121,7 @@ pref_vec <- list(
 	"Home60" = c(0.6, 0.4)
 )
 
-
-# Run loop ----------------------------------------------------------------
-
-#Set max RAM allowed for global variables to 10GB
-# options(future.globals.maxSize = 25000 * 1024^2)
+# Set Data ----------------------------------------------------------------
 
 # create df of all vector options
 all_options <- data.table(expand.grid(numveh = fleet_size_vec,
@@ -137,14 +137,20 @@ all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 all_options[, ID := seq(1:nrow(all_options))]
 
 # Number of iterations; full run is 81648
-nrow(all_options) * 2
+# nrow(all_options) * 2
 
 #Set max RAM allowed for global variables to 10GB
 options(future.globals.maxSize = 25000 * 1024^2)
 
+# Set number of workers (cores) globally
+works <- 3
+
 ## testing -----------------------
-temp_vec <- temp_vec[[1]]
+temp_vec <- temp_vec[3:4]
  
+
+# Run loop ----------------------------------------------------------------
+
 # run loop for each temp vec
 lapply(temp_vec, function(temp) {
 	
@@ -154,14 +160,11 @@ lapply(temp_vec, function(temp) {
 	# split all options list
 	all_options_list <- split(all_options, all_options$ID)
 	
-	# testing -------------------------
-	options_list <- all_options_list[[1]]
-
 	# load big data
 	raw_data <- loadRawData(temp)
 	
 	# set workers
-	plan(multiprocess, workers = 4, gc = T)
+	plan(multicore, workers = works)
 	
 	fleet_load <- future_lapply(all_options_list, function(options_list) {
 		
@@ -235,13 +238,14 @@ lapply(temp_vec, function(temp) {
 									mean_dvmt,
 									pev_dist,
 									pref_dist,
-									home_access,
+									home_access_dist,
 									home_power_dist,
 									work_power_dist,
 									day_of_week,
 									pev_type,
 									dest_type,
 									dest_chg_level,
+									class_type,
 									time_of_day)
 		
 
@@ -266,20 +270,16 @@ lapply(temp_vec, function(temp) {
 	# Save output ----------------------------------------------------------------------------------------
 	#Write fleet_load out to disk
 	fwrite(fleet_load,
-								file = paste0("outputs/full_run_nov_2019/",
+								file = paste0("outputs/2020_jan_results/",
 																						gsub("-", "", Sys.Date()), "_", # date the run
 																						temp,
-																						"_",
 																						".csv"))
 	
 	print(Sys.time() - start)
-	gc(rm(raw_data), reset = T, full = T)
+	# gc(rm(raw_data) full = T)
 	
-	#	.rs.restartR()
-	# .rs.api.restartSession() # restart R session, should clear memory usage
 }) # end of temp vec lapply
 
-# library(rstudioapi)
-
-# restart the r session and run a command upon restart
-#rstudioapi::restartSession(command = source("functions/loadRawData.R"))
+# This function restarts the R session and can be used to clear memory
+# Cannot be used within any type of looping function
+.rs.restartR()
