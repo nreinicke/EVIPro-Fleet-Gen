@@ -123,7 +123,7 @@ pref_vec <- list(
 
 # Set Data ----------------------------------------------------------------
 
-# create df of all vector options
+# Create df of all vector options, excluding temperature. A separate results file is generated for each temperature.
 all_options <- data.table(expand.grid(numveh = fleet_size_vec,
 																																						pev = pev_type_vec,
 																																						dvmt = mean_dvmt_vec, 
@@ -139,14 +139,15 @@ all_options[, ID := seq(1:nrow(all_options))]
 # Number of iterations; full run is 81648
 # nrow(all_options) * 2
 
-#Set max RAM allowed for global variables to 10GB
-options(future.globals.maxSize = 25000 * 1024^2)
+#Set max RAM allowed for global variables
+options(future.globals.maxSize = 25000 * 1024^2) # XMB * 1024^2
 
 # Set number of workers (cores) globally
-works <- 3
+works <- 6
+plan(multicore, workers = works)
 
 ## testing -----------------------
-temp_vec <- temp_vec[4:length(temp_vec)]
+temp_vec <- temp_vec[2]
  
 
 # Run loop ----------------------------------------------------------------
@@ -163,16 +164,12 @@ lapply(temp_vec, function(temp) {
 	# load big data
 	raw_data <- loadRawData(temp)
 	
-	# set workers
-	plan(multicore, workers = works)
-	
 	fleet_load <- future_lapply(all_options_list, function(options_list) {
 		
 		# load_to_bind <- 
 		fleet_sub <-
 			openEVI(
 				evi_raw = raw_data[[1]],
-				#evi_load_profiles = evi_load_profiles,
 				fleet = unlist(options_list$numveh),
 				pev = unlist(options_list$pev),
 				dvmt = options_list$dvmt,
@@ -270,7 +267,7 @@ lapply(temp_vec, function(temp) {
 	# Save output ----------------------------------------------------------------------------------------
 	#Write fleet_load out to disk
 	fwrite(fleet_load,
-								file = paste0("outputs/2020_jan_results/",
+								file = paste0("outputs/forNREL/",
 																						gsub("-", "", Sys.Date()), "_", # date the run
 																						temp,
 																						".csv"))
@@ -282,4 +279,4 @@ lapply(temp_vec, function(temp) {
 
 # This function restarts the R session and can be used to clear memory
 # Cannot be used within any type of looping function
-.rs.restartR()
+#.rs.restartR()
