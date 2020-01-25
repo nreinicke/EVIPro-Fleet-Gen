@@ -103,7 +103,7 @@ evi_fleetGen <- function(evi_raw,
 
   # factor the vehicle class
 		all_perms[, class_type := factor(class_type, levels = c("Sedan",
-																																																																"SUV"))]
+																																																										"SUV"))]
   ################################################################################################################################
   #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
   ################################################################################################################################
@@ -210,8 +210,6 @@ evi_fleetGen <- function(evi_raw,
   # Create the final charging activity itinerary for the full fleet. This pulls all charging events for each unique_vid.
   # Note: when using vmt_weights, this only works if there are matching labels for evi_raw[,schedule_vmt_bin] and fleet[,schedule_vmt_bin]. This
   #     only makes sense if the bin widths used for the two data tables are equal.
-  # TODO
-  # it seems like I would want class_type here
   setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
   setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
   
