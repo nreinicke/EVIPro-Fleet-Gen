@@ -143,11 +143,11 @@ all_options[, ID := seq(1:nrow(all_options))]
 options(future.globals.maxSize = 25000 * 1024^2) # XMB * 1024^2
 
 # Set number of workers (cores) globally
-works <- 6
+works <- 3
 plan(multicore, workers = works)
 
 ## testing -----------------------
-temp_vec <- temp_vec[2]
+temp_vec <- temp_vec[7]
  
 
 # Run loop ----------------------------------------------------------------
