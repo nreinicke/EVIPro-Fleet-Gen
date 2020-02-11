@@ -1,0 +1,122 @@
+---
+title: "Spot Check SEIN Results"
+author: "Max Blasdel"
+date: "2/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 10)
+knitr::opts_chunk$set(comment = NA)
+```
+
+# Check SEIN Results
+
+ Completed model runs from the SEIN project need to be gut checked with an emphasis on making sure Sedan and SUV are different
+
+# Libraries
+
+```{r}
+library(data.table) # data structure
+library(ggplot2) 
+library(scales) # additional graphing
+```
+
+# Load Data
+
+Find all data files and load selective temperatures.
+
+The -20 degree file is used here to show an extreme in the temperature gradients.
+
+```{r}
+file_paths <- dir("outputs/forNREL", pattern = ".csv", full.names = T)
+
+# load selectively as data is very large
+d_output <- fread(file_paths[1])
+```
+
+# Data Analysis
+
+Subset the data and create a few graphs which should illustrate the variation in the scenarios and output.
+
+```{r}
+# show unique valid values
+sapply(d_output[, !c('kw', 'time_of_day'), with = F], unique)
+```
+
+Subset data as the full set is too large for a ggplot
+
+Set variables for subsetting data
+
+## Create lazy function to subset results and graph load
+  
+*lazy* refers to the fact that this is a wrapper for a workflow rather than a more generalizable function.
+
+```{r}
+graphFunc <- function(d, f_size, dvmt) {
+	sub_check <- d[fleet_size == f_size & # largest fleet size
+	mean_dvmt == dvmt &
+	pev_dist == "EQUAL" &
+	# set distributions to equal when possible
+	pref_dist == "Home60" &
+	home_access_dist == "HA50" &
+	home_power_dist == "Equal" &
+	work_power_dist == "Equal" &
+	pev_type == "BEV100" & # all battery electric vehicles
+	class_dist == "Equal",
+	.(sum_kw = sum(kw)),
+	by = c("pev_type",
+	# day of week not addressed in this analysis
+	"dest_type",
+	"dest_chg_level",
+	"time_of_day",
+	# address PEV type
+	"class_type")]
+	
+	# round values for ave kw to make graph more readable
+	sub_check$sum_kw <- round(sub_check$sum_kw, digits = 2)
+	
+	# Show kw by destination, charge type, and vehicle class throughout the day
+	ggplot(data = sub_check, aes(x = time_of_day, y = sum_kw)) +
+	geom_area(aes(fill = dest_chg_level)) +
+	facet_grid(class_type ~ dest_type) +
+	scale_y_continuous(label = comma) +
+	labs(
+	fill = "Destination Charge Level",
+	y = "Sum kw",
+	x = "Time of Day",
+	subtitle = paste("Fleet Size of ", f_size, "and mean daily VMT of", dvmt)
+	) +
+	theme(legend.position = "bottom", text = element_text(size = 16))
+}
+```
+
+# Output graphs showing different dvmts and fleet sizes
+
+Highest daily vehicle miles traveled
+
+```{r}
+graphFunc(d_output, f_size = 50000, dvmt = 45)
+```
+
+Lowest daily vehicle miles traveled
+This graph produces significantly less kw used while the shapes remain the same.
+
+```{r}
+graphFunc(d_output, f_size = 50000, dvmt = 25)
+```
+
+The lowest fleet size produces more variability and much less overall kw used
+
+```{r}
+graphFunc(d_output, f_size = 1000, dvmt = 45)
+```
+
+Lowest possible output based on fleet size and dvmt
+
+```{r}
+graphFunc(d_output, f_size = 1000, dvmt = 25)
+```
+
+Overall the trends expected in fleet size, dvmt, and the difference between Sedans and SUVs have held. SUVs use more energy than sedans with all other things being equal. Energy usage also scales appropriately as the fleet size and miles traveled change.
