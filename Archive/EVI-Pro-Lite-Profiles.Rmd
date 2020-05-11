@@ -1,0 +1,746 @@
+---
+title: "EVI-Pro Lite Load Profiles"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 7, fig.height = 5)
+options(warning.length = 2000L)
+```
+
+Load libraries and functions. The openEVI() function sources all functions except randVector(), so all we need are these two.
+
+```{r}
+library(future.apply)
+library(ggplot2)
+library(data.table)
+library(magrittr)
+library(foreach)
+library(doFuture)
+library(doParallel)
+
+source("functions/func_openEVI.R")
+source("functions/func_randVector.R")
+
+theme_set(theme_bw() + theme(strip.background = element_blank()))
+```
+
+Unregister function to 'clean' up the futures 
+This is an important step in the for loop as otherwise you will be haunted by ghosts of 'futures' past, which may cause catastrophic memory issues. 
+
+```{r}
+unregister <- function() {
+  env <- foreach:::.foreachGlobals
+  rm(list=ls(name=env), pos=env)
+}
+
+# retireive names from list
+getNames <- function(vec, option) {
+	# subset list to match given option	 
+	out <-	lapply(vec, function(x) {
+		 		x[all(x == unlist(option))]
+		 })
+	# filter out zero length lists
+		 return(names(Filter(length, out)))
+}
+
+source("functions/loadRawData.R")
+```
+
+
+Specify user variable options stored in a vector. Where there are different permutations of user variable sets, store as a list of vectors. future.apply will parallel iterate through the different permutations. 
+
+```{r}
+#REMOVE THIS WHEN READY. KEEP FOR TROUBLE SHOOTING AT THE MOMENT
+#mean_vmt <- 40 #mean daily vehicle miles traveled
+
+#temp_list <- c(0, 10, 15, 20) #temp in deg C. Options are -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40
+
+# weights_list <- list("rural" = list(weights = NULL,
+#                                     temp = 15,
+#                                     mean_vmt = 50,
+#                                     loc_class = "rural"),
+#                      "urban" = list(weights = NULL,
+#                                     temp = 25,
+#                                     mean_vmt = 30,
+#                                     loc_class = "urban"))
+```
+
+Create set of test vectors
+```{r}
+fleet_size_vec <- c(50000)
+mean_dvmt_vec <- c(15)
+pev_type_vec <- list("BEV100" = c(0, 0, .30, .70))
+veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2))
+loc_class_vec <- list("urban")
+home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0))
+work_power_vec <- list("L2_80" = c(0.2, 0.8))
+pref_vec <- list("Home100" = c(1.0, 0.0))
+
+# I want temp to be length > 1
+temp_vec <- c("-20C", # celsius
+               "-10C",
+               "0C",
+               "10C",
+               "20C",
+               "30C",
+               "40C") 
+```
+
+Full vectors
+```{r}
+# count of total number of PEVs
+fleet_size_vec <- list(500,
+																							1000,
+																							2500,
+																							5000,
+																							10000,
+																							20000,
+																							50000) 
+
+# average daily miles traveled per vehicle
+mean_dvmt_vec <- c(15,
+                   20,
+                   25,
+                   35,
+                   45,
+                   50) 
+
+# Temperature
+temp_vec <- c("-20C", # celsius
+               "-10C",
+               "0C",
+               "10C",
+               "20C",
+               "30C",
+               "40C"
+               ) 
+
+# PEV Type (confirm the meaning of the labels) (def named wrong)
+pev_type_vec <- list("BEV100" = c(0, 0, .30, .70), # PHEV20, PHEV50,BEV100, BEV250; all BEV
+                     "BEV_DOM" = c(.10, .15, .25, .50), # BEV Dominant
+                     "PHEV_DOM" = c(.25, .50, .10, .15), # PHEV Dominant
+                     "EQUAL_DIST" = c(.15, .35, .15, .35)) # PHEV/BEV Equal share
+
+# adding the vehicle class variable
+veh_class_vec <- list("Sed80_Suv20" = c(0.8, 0.2), # sedan dominant
+																						"Sed50_Suv50" = c(0.5, 0.5), # equal distribution
+																						"Sed20_Suv80" = c(0.2, 0.8)) # suv dominant
+
+# Geography
+loc_class_vec <- list("urban")
+
+# Day of Week (included in code)
+# c(Weekday, Weekend)
+
+# Home Access and Power 																# L1, L2, % without access to home power 
+home_power_vec <- list("HA100_L2_20" = c(0.80, 0.20, 0), #100% access to home power, 80% of those L1
+                       "HA100_L2_80" = c(0.20, 0.80, 0), #100% access to home power, 80% of those L2
+                       "HA100_L2_50" = c(0.5, 0.5, 0), #100% access to home power, 50% of those L2
+                       "HA75_L2_20" = c(0.6, 0.15, 0.25), #75% access to home power, 80% of those L1
+                       "HA75_L2_80" = c(0.15, 0.6, 0.25), #75% access to home power, 80% of those L2
+                       "HA75_L2_50" = c(0.375, 0.375, 0.25), #75% access to home power, 50% of those L2
+                       "HA50_L2_20" = c(0.4, 0.1, 0.5), #50% access to home power, 80% of those L1
+                       "HA50_L2_80" = c(0.1, 0.4, 0.5), #50% access to home power, 80% of those L2
+                       "HA50_L2_50" = c(0.25, 0.25, 0.5)) #50% access to home power, 50% of those L2
+
+# drop all L2 cases, replace with 50/50 split
+# make these an 80/20 split
+
+# Work power
+work_power_vec <- list(
+	"L2_80" = c(0.2, 0.8),
+	"L2_50" = c(0.5, 0.5),
+	"L2_20" = c(0.8, 0.2)
+	)
+	
+	# Home work preference
+	pref_vec <- list(
+	"Home100" = c(1.0, 0.0),
+	"Home80" = c(0.8, 0.2),
+	"Home60" = c(0.6, 0.4)
+	)
+```
+
+Permutations calculation
+```{r}
+length(fleet_size_vec) * 
+	length(mean_dvmt_vec) * 
+	length(pev_type_vec) * 
+	length(veh_class_vec) * 
+	length(work_power_vec) *
+	2 * # for day of week
+	length(home_power_vec) *
+	length(pref_vec)
+	length(temp_vec)
+```
+
+Run the function that wraps the whole thing on each element in the list.
+
+```{r message=FALSE}
+Sys.time()
+
+getDoParName() # get parallel backend name
+getDoParWorkers() # get parallel backend workers (cores)
+
+registerDoSEQ() # register default sequential / backup to unregister function
+ #lapply(temp_vec, function(temp) {
+for(i in 1:length(temp_vec)) {
+
+	# register the future each iteration of the for loop
+	# Using the DoParallel() instead of DoFuture() to try to stay within the foreach library of functions
+	 registerDoParallel(cores = 3)
+	
+	# registerDoFuture() #allows foreach() to use the future package when the %dopar% operator is called
+	# plan(multiprocess, workers = 4, gc = TRUE) #set future plan, make sure at least 1 core is reserved, call garbage collector
+	options(future.globals.maxSize = 25000 * 1024^2) #Set max RAM allowed for global variables to 10GB
+
+  # load the raw data for sedans
+  # evi_data_path_sedan <- paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds")
+  # evi_raw <- readRDS(evi_data_path_sedan)
+  evi_raw <- readRDS(paste0("../../data/preprocessed/evi_raw/", temp_vec[i], ".rds"))
+  # add column for vehicle class
+  evi_raw[, "vehicle_class" := "Sedan"]
+  
+  # Repeat for SUVs
+  # evi_data_path_suv <- paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds")
+  # evi_raw_suv <- readRDS(evi_data_path_suv)
+		evi_raw_suv <- readRDS(paste0("../../data/preprocessed/evi_raw_suv/", temp_vec[i], ".rds"))
+  # add column for vehicle class
+  evi_raw_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to the unique vids to distinguish from sedan data
+  evi_raw_suv[, unique_vid := unique_vid + 100000000]
+  
+  # bind together into a single data.table
+  evi_raw <- rbind(evi_raw_suv,
+  																	evi_raw)
+  
+  rm(evi_raw_suv)
+    # load the load profiles
+  # loadprof_data_path_sedan <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles <- readRDS(loadprof_data_path_sedan)
+  evi_load_profiles <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
+  
+  # add vehicle class
+  evi_load_profiles[, "vehicle_class" := "sedan"]
+  
+  # Repeat for SUVs
+  # loadprof_data_path_suv <- paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds")
+  # evi_load_profiles_suv <- readRDS(loadprof_data_path_suv)
+  evi_load_profiles_suv <- readRDS(paste0("../../data/preprocessed/load_profile/", temp_vec[i], ".rds"))
+  # add vehicle class
+  evi_load_profiles_suv[, "vehicle_class" := "SUV"]
+  
+  # add one hundred million to unique vid to distinguish SUV class of vehicle
+  evi_load_profiles_suv[, unique_vid := unique_vid + 100000000]
+  
+  # bind together into a single data.table
+  evi_load_profiles <- rbind(evi_load_profiles_suv,
+  																											evi_load_profiles)
+  
+  rm(evi_load_profiles_suv)
+
+  tracemem(evi_load_profiles)  
+  gc()
+  #Parallel sessions for permutations of all other variables
+  fleet_load <-
+      foreach(numveh = fleet_size_vec, .combine='rbind') %do% {
+        sub_fleet_load <-
+          foreach(pev = names(pev_type_vec), .combine='rbind', .options.future=list(scheduling=1)) %:%
+          foreach(dvmt = mean_dvmt_vec, .combine='rbind') %:%
+          foreach(pref = names(pref_vec), .combine='rbind') %:%
+          foreach(home = names(home_power_vec), .combine='rbind') %:%
+          foreach(work = names(work_power_vec), .combine='rbind') %:%
+          foreach(loc = loc_class_vec, .combine='rbind') %:%
+        		foreach(vclass = names(veh_class_vec), .combine = "rbind") %dopar% {
+          	
+            #Generate fleet load profile for a single permutation of fleet, pev, dvmt, pref, home, work
+            load_to_bind <- openEVI(evi_raw,
+            																								evi_load_profiles,
+            																								numveh,
+                                    pev_type_vec[[pev]],
+                                    dvmt,
+                                    pref_vec[[pref]],
+                                    home_power_vec[[home]],
+                                    work_power_vec[[work]],
+                                    loc,
+            																								veh_class_vec[[vclass]])
+       
+            # add columns to indicate variable permutations of this run
+            load_to_bind[, ':='(loc_class = loc,
+                                temp_c = temp_vec[i],
+                                fleet_size = numveh,
+                                mean_dvmt = dvmt,
+                                pev_dist = pev,
+                                pref_dist = pref,
+                                home_access = strsplit(home,c("_"))[[1]][1],
+                                home_power_dist = strsplit(home,c("_"))[[1]][2],
+                                work_power_dist = work,
+            																				vehicle_class_dist = vclass)]
+            
+            # add check for distribution of suvs and sedans
+            # For some reason warnings aren't being displayed with this type of parallel processing
+            # Testing within the functions show the ratio of suv/sedan to be preserved
+         #   warning(print(load_to_bind[, .(perc = .N / nrow(load_to_bind) * 100), by = vehicle_class]))
+            
+            # Reduce fleet activity down to 24-hour aggregated load profile
+            # Note: Remove this step, and reduce the number of variable permutations, to confirm imposed weight distributions, vehicle counts, etc.
+            load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24]
+            load_to_bind <- load_to_bind[, .(kw = sum(avg_kw)),
+                                         by = c("loc_class",
+                                                "temp_c",
+                                                "fleet_size",
+                                                "mean_dvmt",
+                                                "pev_dist",
+                                                "pref_dist",
+                                                "home_access",
+                                                "home_power_dist",
+                                                "work_power_dist",
+                                                "day_of_week",
+                                                "pev_type", 
+                                                "dest_type", 
+                                                "dest_chg_level",
+                                                "time_of_day",
+                                         							"vehicle_class_dist")]
+            setkey(load_to_bind,
+            							loc_class,
+            							temp_c,
+            							fleet_size,
+            							mean_dvmt,
+            							pev_dist,
+            							pref_dist,
+            							home_access,
+            							home_power_dist,
+            							work_power_dist,
+            							day_of_week,
+            							pev_type,
+            							dest_type,
+            							dest_chg_level,
+            							time_of_day)
+            
+            gc()
+            
+            return(load_to_bind)
+        }
+      }
+  
+# If I want to drop columns or change temp to integer it would be here
+ fleet_load[, "loc_class" := NULL]
+ 
+#change temp, fleet size, dvmt to integer
+ fleet_load$temp_c  <-
+	as.integer(gsub("C", "", fleet_load$temp_c))
+
+# convert other columns to integer
+fleet_load[, fleet_size := as.integer(fleet_size)]
+fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
+ 
+  
+  #Write fleet_load out to disk
+  fwrite(fleet_load,
+  										file = paste0("outputs/full_run_nov_2019/",
+  																								gsub("-", "", Sys.Date()), "_", # date the run
+  																								temp_vec[i],
+  																								"dev",
+  																								".csv"))
+  
+  # remove large objects
+  rm(evi_raw)
+  rm(evi_load_profiles)
+  rm(fleet_load)
+  
+  # clean up memory
+  gc()
+  
+  # clean up backend
+  # unregister()
+  
+  # adding a check on the memory usage at each iteration for testing
+  # The memory should be roughly the same size each time
+  warning(print(object.size(x=lapply(ls(), get)), units="Mb"))
+} # end of for loop
+#})
+Sys.time()
+```
+
+Rewriting as a futures parallel
+
+```{r}
+#Set max RAM allowed for global variables to 10GB
+# options(future.globals.maxSize = 25000 * 1024^2)
+
+# create df of all vector options
+all_options <- data.table(expand.grid(numveh = fleet_size_vec,
+												pev = pev_type_vec,
+												dvmt = mean_dvmt_vec, 
+												home = home_power_vec, 
+												work = work_power_vec, 
+												loc = loc_class_vec, 
+												vclass = veh_class_vec, 
+												pref = pref_vec))
+
+# add ID column to split on
+all_options[, ID := seq(1:nrow(all_options))]
+
+## testing
+# temp <- temp_vec[[4]]
+# run loop for each temp vec
+lapply(temp_vec, function(temp) {
+
+	# time testing
+	start <- Sys.time()
+	
+	# load raw data and load profiles
+	## I think this is the memory suck maybe look into the ff package for reading and storing data structures
+	## Things to try
+	
+	# raw_data <- list()
+	raw_data <- loadRawData(temp)
+  
+  # split all options list
+  all_options_list <- split(all_options, all_options$ID)
+  
+  # testing
+  # options_list <- all_options_list[[1]]
+
+  # set workers
+  plan(multiprocess, workers = 3, gc = T)
+  
+  fleet_load <- future_lapply(all_options_list, function(options_list) {
+  	
+  	# load_to_bind <- 
+  		fleet_sub <-
+  		openEVI(
+  									evi_raw = raw_data[[1]],
+  									#evi_load_profiles = evi_load_profiles,
+  									fleet = unlist(options_list$numveh),
+  									pev = unlist(options_list$pev),
+  									dvmt = options_list$dvmt,
+  									pref = unlist(options_list$pref),
+  									home = unlist(options_list$home),
+  									work = unlist(options_list$work),
+  									loc = options_list$loc,
+  									veh_class = unlist(options_list$vclass))
+
+  	# test out change function location	
+  	load_to_bind <- get_fleet_profiles(fleet_sub,
+  																																					unlist(options_list$numveh),
+  																																					raw_data[[2]])
+# Create Names ----------------------------------------------------------------------- 
+  	        load_to_bind[, ':=' (# loc_class = options_list$loc[[1]],
+            																					temp_c = temp,
+            																					fleet_size = options_list$numveh[[1]],
+            																					mean_dvmt = options_list$dvmt,
+            																					pev_dist = getNames(pev_type_vec, options_list$pev),
+            																					pref_dist = getNames(pref_vec, options_list$pref),
+            																					# split home access vector, select first element, home access
+            																					home_access = regmatches(getNames(home_power_vec, options_list$home),
+            																																													regexpr("_", getNames(home_power_vec, options_list$home)),
+            																																													invert = T)[[1]][1],
+            																					# split home access vector, select second element, home power distribution 
+            																					home_power_dist = regmatches(getNames(home_power_vec, options_list$home),
+            																																																		regexpr("_", getNames(home_power_vec, options_list$home)),
+            																																																		invert = T)[[1]][2],
+            																					work_power_dist = getNames(work_power_vec, options_list$work),
+            																					vehicle_class_dist = getNames(veh_class_vec, options_list$vclass)
+            													)] # end add naming columns
+  	
+  	# summarize data based on distinct options
+  	 load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24]
+            load_to_bind <- load_to_bind[, .(kw = sum(avg_kw)),
+                                         by = c(# "loc_class",
+                                                "temp_c",
+                                                "fleet_size",
+                                                "mean_dvmt",
+                                                "pev_dist",
+                                                "pref_dist",
+                                                "home_access",
+                                                "home_power_dist",
+                                                "work_power_dist",
+                                                "day_of_week",
+                                                "pev_type", 
+                                                "dest_type", 
+                                                "dest_chg_level",
+                                                "time_of_day",
+                                         							"vehicle_class_dist")]
+            setkey(load_to_bind,
+            							#loc_class,
+            							temp_c,
+            							fleet_size,
+            							mean_dvmt,
+            							pev_dist,
+            							pref_dist,
+            							home_access,
+            							home_power_dist,
+            							work_power_dist,
+            							day_of_week,
+            							pev_type,
+            							dest_type,
+            							dest_chg_level,
+            							time_of_day)
+            
+            # gc()
+            
+            return(load_to_bind)
+  	 }) # end of future apply
+ 
+  # bind results together
+ fleet_load <- rbindlist(fleet_load)
+  
+ # remove large objects
+	#gc(rm(raw_data))
+ 
+ # Change data types --------------------------------------------------------------------------------- 
+	#change temp, fleet size, dvmt to integer
+	fleet_load[, temp_c := as.integer(gsub("C", "", temp_c))]
+ 
+	# convert other columns to integer
+	fleet_load[, fleet_size := as.integer(fleet_size)]
+	fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
+ 
+	
+	# Save output ----------------------------------------------------------------------------------------
+	#Write fleet_load out to disk
+  fwrite(fleet_load,
+  										file = paste0("outputs/full_run_nov_2019/",
+  																								gsub("-", "", Sys.Date()), "_", # date the run
+  																								temp,
+  																								"_",
+  																								".csv"))
+  
+	print(Sys.time() - start)
+	gc(rm(raw_data))
+	
+#	.rs.restartR()
+#	.rs.api.restartSession() # restart R session, should clear memory usage
+}) # end of temp vec lapply
+
+
+all_options
+```
+
+
+Spot check the output
+
+```{r}
+
+mallinfo?
+# remove residual data usage
+gc(full = T)
+
+# get files (currently only one file for testing)
+out_path <- dir("outputs/testing", full.names = T)
+
+# load data
+check <- fread(out_path)
+
+# subset as the full data is too large for a ggplot
+sub_check <- check[fleet_size == 50000 &
+                     mean_dvmt == 50 &
+                     pev_dist == "BEV100" &
+                     pref_dist == "Home50" &
+                     home_access == "HA50" &
+                     home_power_dist == "L225",
+                   .(avg_kw = sum(kw)),
+                   by=c("day_of_week",
+                        "pev_type",
+                        "dest_type",
+                        "dest_chg_level",
+                        "time_of_day",
+                   					"vehicle_class_dist")]
+
+test1 <- ggplot(data = sub_check, aes(x = time_of_day, y = avg_kw)) +
+  geom_area(aes(fill = dest_chg_level)) +
+  facet_grid(vehicle_class_dist ~ dest_type)
+
+test1
+```
+
+```{r}
+library(dplyr)
+
+sub_check <-
+	check %>% 
+			filter(fleet_size == 5000 & 
+											mean_dvmt == 50 &
+											pev_dist == "BEV25" & # (pev_distribution) labels currently wrong
+											pref_dist == "Home50" &
+											home_access == 'HA50' &
+											day_of_week == "weekday" &
+											pev_type == "BEV250") %>% 
+			group_by(day_of_week,
+												pev_type,
+												dest_type,
+												dest_chg_level,
+												time_of_day,
+												vehicle_class_dist) %>% 
+			summarise(avg_kw = sum(kw))
+
+
+sub_check %>% 
+	ggplot() +
+	geom_area(aes(x =time_of_day, y = avg_kw, fill = dest_chg_level)) +
+	facet_grid(vehicle_class_dist ~ dest_type) +
+	labs(subtitle = unique(sub_check$pev_type))
+```
+
+```{r}
+test2 <- ggplot(sub_check[dest_type == "Public" & day_of_week == "weekend" & pev_type == "BEV250",sum(avg_kw),by=c("time_of_day","dest_chg_level")], aes(x=time_of_day, y=V1)) +
+  geom_line() +
+  facet_grid(~dest_chg_level)
+
+test3 <- ggplot(sub_check[,sum(avg_kw),by=c("day_of_week","dest_chg_level","time_of_day")], aes(x=time_of_day, y=V1)) +
+  geom_area(aes(fill=dest_chg_level)) +
+  facet_grid(~day_of_week)
+```
+
+
+```{r}
+# test_dt <- rbindlist(flt_list)
+# test_dt[,':='(loc_class = factor(loc_class, levels = loc_class_vec),
+#               temp_c = factor(temp_c, levels = temp_vec),
+#               pev_dist = factor(pev_dist, levels = names(pev_type_vec)),
+#               pref_dist = factor(pref_dist, levels = names(pref_vec)),
+#               home_power_dist = factor(home_power_dist, levels = names(home_power_vec)),
+#               work_power_dist = factor(work_power_dist, levels = names(work_power_vec)))]
+
+prof_24_by_class <- copy(test_dt)
+prof_24_by_class[time_of_day > 24,time_of_day := time_of_day - 24]
+prof_24_by_class <- prof_24_by_class[, .(kw = sum(avg_kw)),
+                                by = c("loc_class",
+                                       "temp_c",
+                                       "fleet_size",
+                                       "mean_dvmt",
+                                       "pev_dist",
+                                       "pref_dist",
+                                       "home_power_dist",
+                                       "work_power_dist",
+                                       "day_of_week",
+                                       "pev_type", 
+                                       "dest_type", 
+                                       "dest_chg_level",
+                                       "time_of_day")]
+setkey(prof_24_by_class,loc_class,temp_c,fleet_size,mean_dvmt,pev_dist,pref_dist,home_power_dist,work_power_dist,day_of_week,pev_type,dest_type,dest_chg_level,time_of_day)
+write.csv(prof_24_by_class[temp_c == "-20C",.SD], file="output/Example_load-profile-structure_-20C.csv")
+
+```
+
+Check out the PEV type differences between scenarios.
+
+```{r}
+test_dt[temp_c == "-10C",.(pev_type = unique(pev_type),scenario = unique(loc_class),day_of_week = unique(day_of_week)),by=c("fleet_id","pev_dist")][, .N, by = c("pev_dist","pev_type", "scenario", "day_of_week")] %>%
+  ggplot(aes(pev_type, N, fill = scenario)) + 
+  geom_col(position = "dodge") + 
+  facet_grid(pev_dist ~ day_of_week) +
+  labs(title = "Number of Vehicles by type")
+
+test_dt[temp_c == "-10C",.(vmt = unique(schedule_vmt),scenario = unique(loc_class),day_of_week = unique(day_of_week)),by=c("fleet_id","pev_dist")][, .N, by = c("pev_dist","vmt", "scenario", "day_of_week")] %>%
+  ggplot(aes(vmt)) + 
+  geom_histogram(binwidth = 10) + 
+  facet_wrap(pev_dist ~ day_of_week) +
+  labs(title = "Number of Vehicles by type")
+```
+
+Plot the 24 hour profile in a few different configurations.
+
+```{r}
+prof_24_by_class <- copy(test_dt)
+prof_24_by_class[time_of_day > 24,time_of_day := time_of_day - 24]
+prof_24_by_class <- prof_24_by_class[, .(kw = sum(avg_kw)),
+                                by = c("loc_class",
+                                       "temp_c",
+                                       "fleet_size",
+                                       "mean_dvmt",
+                                       "pev_dist",
+                                       "pref_dist",
+                                       "home_power_dist",
+                                       "work_power_dist",
+                                       "day_of_week",
+                                       "pev_type", 
+                                       "dest_type", 
+                                       "dest_chg_level",
+                                       "time_of_day")]
+
+prof_24_by_class[, .(avg_kw = sum(kw)), 
+                        by = c("time_of_day",
+                               "dest_chg_level",
+                               "day_of_week")] %>%
+  ggplot(aes(x = time_of_day)) +
+  geom_area(aes(y = kw, fill = dest_chg_level)) +
+  scale_fill_brewer("Charger Level", palette = "Dark2") +
+  labs(x = "Time of day", y = "Average kw") + 
+  facet_wrap(day_of_week ~ scenario, ncol = 2)
+
+test <- prof_24_by_class[loc_class == "urban" &
+                             temp_c == "-20C" &
+                             fleet_size == 500 &
+                             mean_dvmt == 15 &
+                             pev_dist == "PHEV" &
+                             pref_dist == "Home" &
+                             home_power_dist == "HA100L1" &
+                             work_power_dist == "AllL2" &
+                             day_of_week == "weekday" &
+                             pev_type == "PHEV20" &
+                             dest_type == "Home" &
+                             dest_chg_level == "L1",
+                         kw, by=time_of_day]
+
+fleet_load[, .(avg_kw = sum(kw)), 
+                        by = c(
+                                       "home_power_dist",
+                                       "pev_dist",
+                                       "pref_dist",
+                                       "day_of_week",
+                                       "time_of_day")] %>%
+ggplot(aes(x = time_of_day)) +
+  geom_area(aes(y = avg_kw, fill = dest_chg_level)) +
+  scale_fill_brewer("Charger Level", palette = "Dark2") +
+  labs(x = "Time of day", y = "Average kw") +
+  facet_grid(day_of_week + temp_c ~ pev_dist + dest_type)
+
+fleet_load[home_power_dist == "L225", .(avg_kw = sum(kw)), 
+                        by = c(
+                                       "home_access",
+                                       "pev_dist",
+                                       "pref_dist",
+                                       "dest_chg_level",
+                                       "day_of_week",
+                                       "time_of_day")] %>%
+ggplot(aes(x = time_of_day)) +
+  geom_area(aes(y = avg_kw, fill = dest_chg_level)) +
+  scale_fill_brewer("Charger Level", palette = "Dark2") +
+  labs(x = "Time of day", y = "Average kw") +
+  facet_grid(day_of_week + home_access ~ pev_dist + pref_dist)
+```
+
+How do the ecdfs compare?
+
+```{r}
+ggplot(prof_24_by_class, aes(avg_kw_by_class, color = dest_chg_level, linetype = scenario)) +
+  stat_ecdf() +
+  scale_color_brewer("Charger Level", palette = "Dark2") +
+  scale_linetype("Location") +
+  facet_grid(day_of_week ~ dest_chg_level)
+```
+
+Output data for NREL
+
+```{r}
+nrel_dt_1_hires <- flt_list$rural$load_profile[,.(temp_c,scenario,fleet_avg_vmt,day_of_week,pev_type,dest_type,dest_chg_level,fleet_id,session_id,time_of_day,avg_kw)]
+setkey(nrel_dt_1_hires,day_of_week,fleet_id,session_id,time_of_day)
+write.csv(nrel_dt_1_hires,file=paste0(getwd(),"/output/SEIN-Load-Profile-Example1-HiRes.csv"))
+
+nrel_dt_1_lowres <- nrel_dt_1_hires[,.(avg_kw = sum(avg_kw)),by=c("temp_c","scenario","fleet_avg_vmt","day_of_week","pev_type","dest_type","dest_chg_level","time_of_day")]
+setkey(nrel_dt_1_lowres,time_of_day)
+write.csv(nrel_dt_1_lowres,file=paste0(getwd(),"/output/SEIN-Load-Profile-Example1-LowRes.csv"))
+
+nrel_dt_2_hires <- flt_list$urban$load_profile[,.(temp_c,scenario,fleet_avg_vmt,day_of_week,pev_type,dest_type,dest_chg_level,fleet_id,session_id,time_of_day,avg_kw)]
+setkey(nrel_dt_2_hires,day_of_week,fleet_id,session_id,time_of_day)
+write.csv(nrel_dt_2_hires,file=paste0(getwd(),"/output/SEIN-Load-Profile-Example2-HiRes.csv"))
+
+nrel_dt_2_lowres <- nrel_dt_2_hires[,.(avg_kw = sum(avg_kw)),by=c("temp_c","scenario","fleet_avg_vmt","day_of_week","pev_type","dest_type","dest_chg_level","time_of_day")]
+setkey(nrel_dt_2_lowres,time_of_day)
+write.csv(nrel_dt_2_lowres,file=paste0(getwd(),"/output/SEIN-Load-Profile-Example2-LowRes.csv"))
+```
+
