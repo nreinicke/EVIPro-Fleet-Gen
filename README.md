@@ -34,3 +34,6 @@ The following are required to utilize these scripts:
             + dest_chg_level - categorical value for charger power (1=Level 1, 2=Level 2, 3=DCFC)
             + kwh - dispensed energy at charger measured in kwh
             + avg_kw - average power of charge event measured at charger in kw (excludes time spent at zero power)
+# How to Use
+
+The `Gen-EVIPro-Lite_Data.Rmd` R Markdown file demonstrates a full work flow starting from raw EVI-Pro model output. Use of the functions in the `functions/` directory should be used as shown in this R Markdown file.
