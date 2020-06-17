@@ -22,7 +22,7 @@ The following are required to utilize these scripts:
             + B= Power level of work charger (1=Level 1, 2=Level 2)
             + C= Rated power of public DCFC (1=50kw, 2=150kw, 3=400kw)
             + D= Consumer preferred charging location (1=home, 2=work)
-            + E= Ambient temperature (1=-20C, 2=-10C, 3=0C, 4=+10C, 5=+20C, 6=+25C, 7=+30C, 8=+40C)
+            + E= Ambient temperature (1=-20C, 2=-15C, 3=-10C, 4=-5C, 5=0C, 6=+5C, 7=+10C, 8=+15C, 9=+20C, 10=+25C, 11=+30C, 12=+35C, 13=+40C)
             + F= PEV type (1=PHEV20, 2=PHEV50, 3=BEV100, 4=BEV250)
             + G= Day of week (1=weekday, 2=weekend)
         + Each charging session file should have the following columns of data:
