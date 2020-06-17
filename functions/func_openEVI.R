@@ -2,7 +2,7 @@
 # Original Version: Micah Wright
 # Edits: Jerome Carman, Max Blasdel
 # Version: 2.1
-# Description: wrapper function to create a PEV fleet and produce load profiles
+# Description: wrapper function to create a PEV fleet
 # Required Variables
 #			evi_raw: data table of EVI-Pro charge session data
 #   fleet: integer specifying the size of the desired fleet
@@ -48,13 +48,7 @@ openEVI <- function(evi_raw,
                             bin_width = 10, #Do not change this from 10 unless evi_load_profiles are re-run with a different bin width
                             loc_class = loc_class)
   
-  #Create 24-hour load profile for the fleet
-  # evi_fleet_prof <- get_fleet_profiles(evi_fleet, 
-  # 																																					fleet, 
-  # 																																					evi_load_profiles)
-  
-  #Return just the fleet load profile. Ignore the fleet activity and fleet stats for the iterative generation of load profiles for NREL
-  # return(evi_fleet_prof)
+  # Return fleet
   return(evi_fleet$data)
 }
 
