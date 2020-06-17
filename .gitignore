@@ -4,4 +4,6 @@
 .Ruserdata
 
 outputs/
+Archive/
+functions/Archive/
 *.html

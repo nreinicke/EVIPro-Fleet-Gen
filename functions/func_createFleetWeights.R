@@ -5,7 +5,7 @@
 # Date: March 30, 2019
 # Description: Used to define weights of different fleet characteristics
 # Variables
-#   None
+#   <to be completed>
 # Version Changes
 #   v1.1: jkc: added ambient temperature variable temp_weights
 #   v2.0: removed temp and pev weights
@@ -16,8 +16,7 @@ create_fleet_weights <- function(pev_w = c(0.25,0.25,0.25,0.25),
                                  pref_w = c(0.8,0.2),
                                  home_w = c(0.2,0.8,0),
                                  work_w = c(0.0,1),
-																																	veh_w = c(0.5, 0.5)) { # additional variable for suv/sedan # pay attention to naming conventions
-                                #pub_w = c(0.8,0.2,0))) { 
+																																	veh_w = c(0.5, 0.5)) { 
  
   # error checking
   stopifnot(length(pev_w) == 4,
@@ -25,7 +24,6 @@ create_fleet_weights <- function(pev_w = c(0.25,0.25,0.25,0.25),
             length(home_w) == 3,
             length(work_w) == 2,
   										length(veh_w) == 2)
-            #length(pub_w) == 3)
   
   #PEV Type
   pev_weights <- data.table(
@@ -57,16 +55,9 @@ create_fleet_weights <- function(pev_w = c(0.25,0.25,0.25,0.25),
   	weight = veh_w
   )
   
-  # # Public Charging
-  # public_weights <- data.table(
-  #   name = c('Public50kW','Public150kW','Public400kW'),
-  #   weight = pub_w
-  # )
-  
   return(list(pev_weights = pev_weights,
               pref_weights = pref_weights,
               home_weights = home_weights,
               work_weights = work_weights,
   												vehicle_weights = vehicle_weights))
-              #public_weights=public_weights))
 }
