@@ -139,7 +139,7 @@ temp_vec <- c("-20C",
 														"40C")
 
 # PEV Type Distribution
-#		Vector structure is c(% BEV 100s, % BEV 250s, %PHEV 20s, % PHEV 40s )
+#		Vector structure is c(% %PHEV 20, % PHEV 50, % BEV 100, % BEV 250 )
 #		Any number of distribution vectors can be included in the list
 pev_type_vec <- list("BEV" = c(.10, .15, .25, .50),   # BEV Dominant
 																					"PHEV" = c(.25, .50, .10, .15),  # PHEV Dominant

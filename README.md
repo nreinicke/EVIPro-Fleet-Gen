@@ -10,7 +10,7 @@ The following are required to utilize these scripts:
     + Minimum 40GB RAM, 160GB or more recommended to take advantage of parallelization
  
 2. Software
-	   + R v3.6.2 or greater
+    + R v3.6.2 or greater
     + data.table package, v1.12.8 or greater
     + future package, v1.16.0 or greater
     + future.apply package, v1.4.0 or greater
