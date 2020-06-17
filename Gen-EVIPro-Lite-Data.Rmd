@@ -16,7 +16,6 @@ setwd("/media/spin/sein-evi/source/NREL-Model-Project/")
 # Source R packages
 library(future.apply)
 library(data.table)
-library(doFuture)
 
 # Source functions
 #		Note that many of these functions are not generic and have some hard-coded values in them. Double check functions before running.
@@ -51,12 +50,17 @@ getNames <- function(vec, option) {
 ```
 
 # Generate DVMT distributions
-Only need to do this once
+Creates gamma distribution parameters that are used by vmt_WeightDistGen() to convert average fleet-wide dvmt to a dvmt distribution.
+Only need to do this once. Generates gamma_est.csv which is found in ./input_files.
 ```{r}
 # "../../data/NHTS/gamma_est.csv" generated with "./analysis/est_VMT_parameters.Rmd"
+# The following data are needed to run this, which are available at https://www.dropbox.com/sh/0hm9g07ian0eovh/AADQ53to4G6dr29SOojQFtfma?dl=0
+#		chts_dvmt.csv
+# 	trippub.csv is needed as an input, which contains processed data from NHTS survey data.
 ```
 
 # Generate .rds files of EVI-Pro charge session data and time series load profiles
+Creates input files which are loaded by loadRawData(). These are preprocess raw EVI-Pro outputs into a format that is easier to work with.
 Only need to do this once. This takes an hour or so and generates about 20GB total in files.
 ```{r}
 # Set number of CPU cores to make available
@@ -86,7 +90,7 @@ preprocess_NREL_data(temp_list = temp_vec,
 ```
 
 # Generate load profiles for fleets with a range of characteristics
-For each ambient temperature, this set of scripts generates large .RDS files storing load profiles for all permutations of fleet characteristics.
+For each ambient temperature, this set of scripts generates large .RDS files storing resulting load profiles for all permutations of fleet characteristics that are specified below.
 
 ## Setup
 ```{r}
