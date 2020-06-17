@@ -15,13 +15,8 @@ setwd("/media/spin/sein-evi/source/NREL-Model-Project/")
 
 # Source R packages
 library(future.apply)
-library(ggplot2)
 library(data.table)
-library(magrittr)
-library(foreach)
 library(doFuture)
-library(doParallel)
-library(scales)
 
 # Source functions
 #		Note that many of these functions are not generic and have some hard-coded values in them. Double check functions before running.
@@ -338,6 +333,9 @@ lapply(temp_vec, function(temp) {
 
 #Review and check results
 ```{r}
+library(ggplot2)
+library(scales)
+
 file_paths <- dir(out_folder, pattern = ".csv", full.names = T)
 
 # Create lazy function to subset results and graph load
