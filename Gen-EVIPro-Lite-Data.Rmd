@@ -8,7 +8,7 @@ output: html_document
 
 This markdown file documents the process flow for using all functions developed for creating fleets and associated load profiles using model outputs from NREL's EVI-Pro model.
 
-#Setup
+# Setup
 ```{r}
 # Set working directory
 setwd("/media/spin/sein-evi/source/NREL-Model-Project/")
@@ -50,13 +50,13 @@ getNames <- function(vec, option) {
 }
 ```
 
-#Generate DVMT distributions
+# Generate DVMT distributions
 Only need to do this once
 ```{r}
 # "../../data/NHTS/gamma_est.csv" generated with "./analysis/est_VMT_parameters.Rmd"
 ```
 
-#Generate .rds files of EVI-Pro charge session data and time series load profiles
+# Generate .rds files of EVI-Pro charge session data and time series load profiles
 Only need to do this once. This takes an hour or so and generates about 20GB total in files.
 ```{r}
 # Set number of CPU cores to make available
@@ -85,7 +85,7 @@ preprocess_NREL_data(temp_list = temp_vec,
 																					loadprofile_timestep = 0.25)
 ```
 
-#Generate load profiles for fleets with a range of characteristics
+# Generate load profiles for fleets with a range of characteristics
 For each ambient temperature, this set of scripts generates large .RDS files storing load profiles for all permutations of fleet characteristics.
 
 ## Setup
@@ -331,7 +331,7 @@ lapply(temp_vec, function(temp) {
 }) # end of temp vec lapply
 ```
 
-#Review and check results
+# Review and check results
 ```{r}
 library(ggplot2)
 library(scales)
