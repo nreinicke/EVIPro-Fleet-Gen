@@ -59,8 +59,8 @@ evi_fleetGen <- function(evi_raw,
   all_weights <- rbindlist(t_weights)
 
 
-# all weights for each category will sum to 1  
- #   all_weights[like(name, "week")][, .(sum = sum(weight))]
+	# all weights for each category will sum to 1  
+ # all_weights[like(name, "week")][, .(sum = sum(weight))]
 
   # Use expand.grid to create a data table of all permutations of groups to consider
   all_perms <- as.data.table(expand.grid(lapply(t_weights[c("pev_weights",
@@ -76,7 +76,7 @@ evi_fleetGen <- function(evi_raw,
   																									"power_home", 
   																									"power_work",
   																									"schedule_vmt_bin",
-  																									"vehicle_class")  
+  																									"class_type")  
   
   
   #Calculate total weight for each permutation of groups
@@ -102,11 +102,11 @@ evi_fleetGen <- function(evi_raw,
   all_perms[, pev_type := factor(pev_type, levels=c("PHEV20","PHEV50","BEV100","BEV250"))]
 
   # factor the vehicle class
-		all_perms[, vehicle_class := factor(vehicle_class, levels = c("Sedan",
-																																																																"SUV"))]
-  ###############################################################################################################################_#
-		# Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet ####
-		###############################################################################################################################_#
+		all_perms[, class_type := factor(class_type, levels = c("Sedan",
+																																																										"SUV"))]
+  ################################################################################################################################
+  #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
+  ################################################################################################################################
   
   #Create a fleet where each row is associated with a vehicle. Aggregated distribution matches weights - the number of
   # vehicles matching a particular description = fleet size * stat_weight; so if the combined weight for a vmt/public power/
@@ -124,7 +124,7 @@ evi_fleetGen <- function(evi_raw,
               							"preferred_loc",
               							"pev_type",
               							"schedule_vmt_bin",
-              							"vehicle_class")]
+              							"class_type")]
   
   # partition schedule_vmt_bin to actual mileage bins and day of week indicators
   # recast schedule_vmt_bin to integer
@@ -143,11 +143,6 @@ evi_fleetGen <- function(evi_raw,
 
   # check for fleet size errors and correct
   if( max(fleet_size_error) > 0.001 ) {
-  	# suppress error on small errors
-  	# without this the console is flooded with warnings on large runs making serious errors hard to detect
-  	if(any(fleet_size_error > .1)) { # may change value
-  		print(paste0("Warning: fleet size error of ",as.character(fleet_size_error),". Updating..."))
-  	}
     
     updated_fleet <- lapply(c("weekday", "weekend"), function(day){
       
@@ -171,7 +166,7 @@ evi_fleetGen <- function(evi_raw,
   #Identify vid that matches each row of characteristics in the fleet data table. Merge in charge session data ####
   ###############################################################################################################################_#
   
-  #Randomly pull and append a vid that has the characteristics specified in the fleet data table.
+  # Randomly pull and append a vid that has the characteristics specified in the fleet data table.
   # Identify the subset of vids in evi that are associated with each row in your fleet. Randomly pull one of these vids
   #     and associate it with each entry in your fleet. You now have a list of vids equal in size to your fleet.
   # Note that the number of unique vids may be less than the fleet size. This is because one vid can apply to more than
@@ -182,7 +177,7 @@ evi_fleetGen <- function(evi_raw,
   																			"preferred_loc",
   																			"pev_type",
   																			"schedule_vmt_bin",
-  																			"vehicle_class"))
+  																			"class_type"))
   
   setkeyv(fleet, c("day_of_week",
   																	"power_work",
@@ -190,9 +185,10 @@ evi_fleetGen <- function(evi_raw,
   																	"preferred_loc",
   																	"pev_type",
   																	"schedule_vmt_bin",
-  																	"vehicle_class"))
+  																	"class_type"))
   
-  #Add VIDs to fleet[]
+  # Add VIDs to fleet[]
+  # stat weight gets dropped here
   fleet <- evi_raw[fleet,sample(unique_vid,1,replace=TRUE),by=.EACHI] #with replacement
   setnames(fleet,"V1","unique_vid")
   
@@ -201,20 +197,21 @@ evi_fleetGen <- function(evi_raw,
   # so cannot be relied upon to be a truly unique identifier for each vehicle.
   fleet[,fleet_id:=1:.N]
   
-  #Check for and remove NA rows
+  # Check for and remove NA rows
+  # NAs may occur if there is no vehicle which matches the specified weights
   if(nrow(fleet[is.na(unique_vid)]) > 0 ) {
     warning(paste0("NAs found. Removing ",as.character(nrow(fleet[is.na(unique_vid)]))," vehicles."))
     fleet <- fleet[!is.na(unique_vid),.SD]
   }
   
-  #Create the final charging activity itinerary for the full fleet. This pulls all charging events for each unique_vid.
+  # Create the final charging activity itinerary for the full fleet. This pulls all charging events for each unique_vid.
   # Note: when using vmt_weights, this only works if there are matching labels for evi_raw[,schedule_vmt_bin] and fleet[,schedule_vmt_bin]. This
   #     only makes sense if the bin widths used for the two data tables are equal.
-  ## add vehicle class here ## 
-  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "unique_vid"))
-  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "unique_vid"))
+  setkeyv(evi_raw,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
+  setkeyv(fleet,c("day_of_week","power_work","power_home","preferred_loc","pev_type","schedule_vmt_bin", "class_type", "unique_vid"))
   
-  #Merge charge events with fleet
+  # Merge charge events with fleet
+  # Getting duplicate fleet_ids on this, this is due to multiple charging events in a given day by the same vehicle
   fleet_activity <- evi_raw[fleet]
   
   #Generate fleet statistics to check with desired characteristics

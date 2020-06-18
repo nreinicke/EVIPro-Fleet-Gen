@@ -87,8 +87,9 @@ load_MatFiles <- function(path, temperature, ftype) {
       
       # read the .mat file
       values_dt <- fread(x, col.names = c("vid", "start_time", "end_time_chg", "end_time_prk",
-                                          "dest_type", "dest_chg_level", "kwh", "avg_kw")) 
-      
+                                          "dest_type", "dest_chg_level", "kwh", "avg_kw"))#,
+      																			# fill = T) # fixes an error in missing data 
+      # values_dt <- na.omit(values_dt) # remove NAs created by fill = T above
       # specify temp and filename columns
       values_dt[, ':='(filename = file_path_sans_ext(basename(x)),
                        temp_c = ifelse(temperature %in% c("-20C", "-15C", "-10C", "-5C", "0C"),
