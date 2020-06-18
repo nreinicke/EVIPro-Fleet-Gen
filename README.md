@@ -17,7 +17,7 @@ The following are required to utilize these scripts:
  
 3. Data
     + Vehicle charging event data output from the EVI-Pro model.
-        + Individual charging session results for each ambient temperature and each vehicle class. Session files are named as A_B_C_D_E_VehF_dowG.csv where...
+        + Individual charging session results for each ambient temperature and each vehicle class. Session files are named as A_B_C_D_E_VehF_dowG.csv where (note that vehicle class is not part of the file naming structure. It is expected that there is a Sedan and an SUV data set with identical naming and data structures. The pre-processing functions are design around this assumption, and append the necessary vehicle class identifier during pre-processing)...
             + A= Power level of home charger (1=Level 1, 2=Level 2, 3=No home charger)
             + B= Power level of work charger (1=Level 1, 2=Level 2)
             + C= Rated power of public DCFC (1=50kw, 2=150kw, 3=400kw)
@@ -37,3 +37,5 @@ The following are required to utilize these scripts:
 # How to Use
 
 The `Gen-EVIPro-Lite_Data.Rmd` R Markdown file demonstrates a full work flow starting from raw EVI-Pro model output. Use of the functions in the `functions/` directory should be used as shown in this R Markdown file.
+
+Note that there are hard-coded file paths within many of the functions. Be sure to comb through all functions first prior to running to make sure hard-coded values are updated to your directory structure. Also, in this first release, not all functions are fully generalized. Be sure to familiarize yourself with the contents of each function and identify areas where variable values are hard-coded.
