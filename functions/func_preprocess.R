@@ -15,11 +15,11 @@ source("functions/func_loadEVIPro.R") # loads EVIPro data and stores in a single
 source("functions/func_calcBaseEVILoad.R") # pre-calculates load profile for all unique_vid in evi_raw
 
 #Define function
-preprocess_NREL_data <- function(inputdir_evipro, # character string of directory containing files provided by NREL
+preprocess_NREL_data <- function(temp_list,              # vector of character strings of ambient temperature values (i.e. c("20C","30C","35C"))
+                                 inputdir_evipro,        # character string of directory containing files provided by NREL
                                  inputdir_chts,          # character string of file path to chts_dvmt.csv file provided by NREL
                                  outputdir_eviraw,       # character string of directory to save raw evi .rds files
                                  outputdir_loadprofile,  # character string of directory to save raw load profile .rds files
-                                 temp_list,              # vector of character strings of temperatures to process (i.e. c("20C","30C","35C"))
                                  vmt_bin_size,           # integer of vmt bin size for load_EVIPro() function
                                  loadprofile_timestep) { # float of time step in decimal hours for calcBaseEVILoad() function
 		
@@ -32,6 +32,9 @@ preprocess_NREL_data <- function(inputdir_evipro, # character string of director
 		                         vmt_bin_size)
 		  
 		  # Save charging session data table
+		  if(!dir.exists(outputdir_eviraw)) {
+		    dir.create(outputdir_eviraw)
+		  }
 		  saveRDS(evi_raw, paste0(outputdir_eviraw,
 		                          temp_list[i], 
 		                          ".rds"))
@@ -40,6 +43,9 @@ preprocess_NREL_data <- function(inputdir_evipro, # character string of director
 		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
 		  
 		  # Save load profiles data table
+		  if(!dir.exists(outputdir_loadprofile)) {
+		    dir.create(outputdir_loadprofile)
+		  }
 		  saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                    temp_list[i],
 		                                    ".rds"))

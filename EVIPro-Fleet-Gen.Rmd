@@ -39,6 +39,7 @@ source("functions/func_calcBaseEVILoad.R") #Pre-calculates load profile for all 
 source("functions/func_genVmtWeights.R") #Generates vmt distribution for fleet generation
 source("functions/func_createFleetWeights.R") #Creates fleet weights from values hard coded in this function.
 source("functions/func_genFleetProfiles.R") #Creates 48-hour load profile for the resulting fleet
+source("functions/func_estDVMTGammaParameters.R") # Creates gamma distribution parameters from NHTS data for generating DVMT distributions
 
 # Setup futures parallel processing
 options(future.fork.enable = T)

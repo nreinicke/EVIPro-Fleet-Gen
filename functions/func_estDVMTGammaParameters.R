@@ -12,6 +12,9 @@
 #   1.0: Created by Micah Wright as a .Rmd file
 #   1.1: Converted to R function by Jerome Carman
 
+library(bit64)
+library(data.table)
+
 estDVMTGammaParameters <- function(input_nhts_path = "",
                                    input_chts_path = "",
                                    output_dir = "") {
