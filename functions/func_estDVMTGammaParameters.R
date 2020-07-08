@@ -5,9 +5,9 @@
 # Date: June, 2020
 # Description: Generates gamma distribution parameter for constructing DVMT distribution for EVI-Pro fleets
 # Required Variables
-#   input_nhts_path: 
-#   input_chts_path: 
-#   output_dir:
+#   input_nhts_path: raw trippub.csv file downloaded from https://nhts.ornl.gov/downloads
+#   input_chts_path: .csv file with two columns: chts_vid, dvmt. This is a subset of the "Drive Cycle Data by Vehicle" dataset than can be downloaded from NREL at https://www.nrel.gov/transportation/secure-transportation-data/tsdc-california-travel-survey.html
+#   output_dir: path to save output from this function.
 # Version History
 #   1.0: Created by Micah Wright as a .Rmd file
 #   1.1: Converted to R function by Jerome Carman
@@ -55,12 +55,12 @@ estDVMTGammaParameters <- function(input_nhts_path = "",
   dt_list <- split(vmt, by = c("TDWKND", "URBRUR")) 
   est_list <- lapply(dt_list, function(x) MASS::fitdistr(x$DAILYVMT, "gamma", lower = c(0,0)))  
   
-  # Convert the output to a data frame and save it.
+  # Convert the output to a data frame and return it.
   est_list <- lapply(est_list, function(x) as.data.table(broom::tidy(x)))
   est_dt <- rbindlist(est_list, idcol = TRUE)
   est_dt[, ':=' (day_of_week = sub("\\..*", "", .id),
                  urban = sub(".*\\.", "", .id))]
   est_dt <- dcast(est_dt, day_of_week + urban ~ term, value.var = "estimate")
-  fwrite(est_dt, paste0(output_dir,"gamma_est.csv"))
+  return(est_dt)
   
 }

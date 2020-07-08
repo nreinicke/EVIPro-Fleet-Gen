@@ -58,13 +58,15 @@ getNames <- function(vec, option) {
 ```
 
 # Generate Daily Vehicle Miles Traveled (DVMT) distributions
-Creates gamma distribution parameters that are used by vmt_WeightDistGen() to convert average fleet-wide dvmt to a dvmt distribution.
-Only need to do this once. Generates gamma_est.csv which is found in ./input_files.
+Creates gamma distribution parameters that are used by vmt_WeightDistGen() to convert average fleet-wide dvmt to a dvmt distribution. Generates gamma_est.csv.
+ - NHTS trippub.csv file can be downloaded from https://nhts.ornl.gov/downloads
+ - Data for generating the chts_dvmt.csv file can be downloaded at https://www.nrel.gov/transportation/secure-transportation-data/tsdc-california-travel-survey.html
 ```{r}
-# "../../data/NHTS/gamma_est.csv" generated with "./analysis/est_VMT_parameters.Rmd"
-# The following data are needed to run this, which are available at https://www.dropbox.com/sh/0hm9g07ian0eovh/AADQ53to4G6dr29SOojQFtfma?dl=0
-#		chts_dvmt.csv
-# 	trippub.csv is needed as an input, which contains processed data from NHTS survey data.
+gammaParameters <- estDVMTGammaParameters(input_nhts_path = "input/trippub.csv", # path to nhts trippub.csv file
+                                          input_chts_path = "input/chts_dvmt.csv" # path to chts_dvmt.csv
+                                          )
+
+fwrite(gammaParameters, file="input/gamma_est.csv")
 ```
 
 # Generate .rds files of EVI-Pro charge session data and time series load profiles
@@ -81,21 +83,21 @@ temp_vec <- paste0(temp_vec, "C")
 
 # Sedans: nothing returned. Results saved in specified output directories
 preprocess_NREL_data(temp_list = temp_vec,
-																					inputdir_evipro = "../../data/sessions_all_ambient_temps/",
-																					inputdir_chts = "../../data/chts_dvmt.csv",
-																					outputdir_eviraw = "../../data/preprocessed/evi_raw/",
-																					outputdir_loadprofile = "../../data/preprocessed/load_profile/",
-																					vmt_bin_size = 10,
-																					loadprofile_timestep = 0.25)
+                     inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_sedan/",
+                     inputdir_chts = "input/chts_dvmt.csv",
+                     outputdir_eviraw = "input/preprocessed/evi_raw_sedan/",
+                     outputdir_loadprofile = "input/preprocessed/load_profile_sedan/",
+                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
+                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
 
 # SUVs: nothing returned. Results saved in specified output directories
 preprocess_NREL_data(temp_list = temp_vec,
-																					inputdir_evipro = "../../data/sessions_all_ambient_temps_suv/",
-																					inputdir_chts = "../../data/chts_dvmt.csv",
-																					outputdir_eviraw = "../../data/preprocessed/evi_raw_suv/",
-																					outputdir_loadprofile = "../../data/preprocessed/load_profile_suv/",
-																					vmt_bin_size = 10,
-																					loadprofile_timestep = 0.25)
+                     inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_suv/",
+                     inputdir_chts = "input/chts_dvmt.csv",
+                     outputdir_eviraw = "input/preprocessed/evi_raw_suv/",
+                     outputdir_loadprofile = "input/preprocessed/load_profile_suv/",
+                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
+                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
 ```
 
 # Generate load profiles for fleets with a range of characteristics
@@ -104,16 +106,13 @@ For each ambient temperature, this set of scripts generates large .RDS files sto
 ## Setup
 ```{r}
 # output folder
-out_folder <- "../../output/EVIPro-Lite/20200506/"
-if(!dir.exists(out_folder)) {
-  dir.create(out_folder)
-  dir.create(paste0(out_folder,"runlogs/"))
-}
+out_folder <- paste0("output/fleetprofiles_",format(Sys.time(), "%d-%b-%Y_%H-%M"),"/")
 
 # Initialize log file to catch debugging output
-log_file <<- file(paste0(out_folder,"runlogs/EVIProLite_RunLog_", format(Sys.time(), "%d-%b-%Y_%H-%M"), ".log"), open = 'a')
+log_file <<- file(paste0(out_folder,"runlog_", format(Sys.time(), "%d-%b-%Y_%H-%M"), ".log"), open = 'a')
 
 # Indicate whether to include verbose output for debugging
+#   Note this is not well implemented yet.
 debugFleetGen <- T
 ```
 
@@ -207,7 +206,8 @@ all_options <- data.table(expand.grid(numveh = fleet_size_vec,
                                       work = work_power_vec,
                                       loc = loc_class_vec,
                                       vclass = veh_class_vec,
-                                      pref = pref_vec))
+                                      pref = pref_vec)
+                          )
 
 # split all options list so lapply can run on it
 all_options[, ID := seq(1:nrow(all_options))] # add ID column to split on
