@@ -1,6 +1,9 @@
 ---
-title: "VMT distribution parameter estimates for urban and rural populations with NHTS"
-author: "Micah Wright"
+title: "VMT Gamma Distribution Parameter Estimates for Urban and Rural Populations Using NHTS"
+author:
+- name: "Micah Wright, Research Assistant"
+  affiliation: "Schatz Energy Research Center"
+thanks: "Copyright (c) 2020, Schatz Energy Research Center. This file is part of software that has been released by the Schatz Energy Research Center under a license described in detail in the 'LICENSE' file, which should be included with the software release. Files are available at https://www.github/com/schatzcenter/EVIPro-Fleet-Gen"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
   html_document: default
