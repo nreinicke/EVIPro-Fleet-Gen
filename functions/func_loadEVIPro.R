@@ -26,7 +26,7 @@ load_EVIPro <- function(target_dir,
                         dvmt_file,
                         vmt_bin_width = 10) {
   # source loadmat function
-  source("functions/func_LoadMat.R")
+  source("functions/func_loadMat.R")
   
   evi <- load_MatFiles(target_dir, temp, ftype = "csv")
   
