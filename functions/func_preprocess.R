@@ -11,7 +11,7 @@ library(future.apply)
 library(data.table)
 
 # source functions
-source("functions/func_LoadEVIPro.R") # loads EVIPro data and stores in a single data table
+source("functions/func_loadEVIPro.R") # loads EVIPro data and stores in a single data table
 source("functions/func_calcBaseEVILoad.R") # pre-calculates load profile for all unique_vid in evi_raw
 
 #Define function
