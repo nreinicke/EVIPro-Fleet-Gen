@@ -17,8 +17,6 @@ This markdown file documents the process flow for using all functions developed 
 
 # Setup
 ```{r}
-# Set working directory
-setwd("/media/spin/sein-evi/source/EVIPro-Fleet-Gen/")
 
 # Source R packages
 library(future.apply)
