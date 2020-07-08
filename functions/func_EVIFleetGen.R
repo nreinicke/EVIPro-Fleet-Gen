@@ -1,7 +1,7 @@
 # Author: Schatz Energy Research Center
 # Original Version: Jerome Carman
 # Edits: Jerome Carman and/or Daug Saucedo and/or Andy Harris and/or Micah Wright
-# Version: 2.0
+# Version: 2.1
 # Date: March 7, 2019
 # Description: Loads a data table containing EVIPro model data from NREL, applies user defined weights of fleet characteristics, and generates a fleet of vids
 # Required Variables
