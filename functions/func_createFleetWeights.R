@@ -16,14 +16,14 @@ create_fleet_weights <- function(pev_w = c(0.25,0.25,0.25,0.25),
                                  pref_w = c(0.8,0.2),
                                  home_w = c(0.2,0.8,0),
                                  work_w = c(0.0,1),
-																																	veh_w = c(0.5, 0.5)) { 
+                                 veh_w = c(0.5, 0.5)) { 
  
   # error checking
   stopifnot(length(pev_w) == 4,
             length(pref_w) == 2,
             length(home_w) == 3,
             length(work_w) == 2,
-  										length(veh_w) == 2)
+            length(veh_w) == 2)
   
   #PEV Type
   pev_weights <- data.table(
@@ -59,5 +59,5 @@ create_fleet_weights <- function(pev_w = c(0.25,0.25,0.25,0.25),
               pref_weights = pref_weights,
               home_weights = home_weights,
               work_weights = work_weights,
-  												vehicle_weights = vehicle_weights))
+              vehicle_weights = vehicle_weights))
 }

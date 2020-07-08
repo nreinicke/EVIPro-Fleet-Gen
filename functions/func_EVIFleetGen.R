@@ -5,12 +5,12 @@
 # Date: March 7, 2019
 # Description: Loads a data table containing EVIPro model data from NREL, applies user defined weights of fleet characteristics, and generates a fleet of vids
 # Required Variables
-#   evi: data table created using the loadEVIPro() function. Must have the following columns
-#       "schedule_vmt_bin","power_public","power_work","power_home","preferred_loc","pev_type","day_of_week","vid"
-#       Values in these columns MUST equal the values in the "name" column in the weights data tables listed below
+#   evi_raw: data table created using the loadEVIPro() function. Must have the following columns
+#            "schedule_vmt_bin","power_public","power_work","power_home","preferred_loc","pev_type","day_of_week","vid"
+#            Values in these columns MUST equal the values in the "name" column in the weights data tables listed below
 #   fleet_size: integer specifying the size of the desired fleet
 #   weights: list of data.tables with two columns ("name" and "weight") and rows containing names and associated decimals (with a sum of 1) that represent the fraction of fleet vehicles comprised of each variable in the name column.
-#   use_mix: logical. Is the fleet built using pev weights or vmt weights? FALSE = use vmt weights. TRUE = use pev weights.
+#   bin_width: width in miles of dvmt distribution. Must be the same bin width used in preprocess_NREL_data() function
 #   loc_class: character, either "urban" or "rural"
 # Version History
 #   1.1: JKC added the "rbind" approach to creating the weighted fleet, as opposed to the binary search appraoch. This creates a much closer
@@ -64,19 +64,19 @@ evi_fleetGen <- function(evi_raw,
 
   # Use expand.grid to create a data table of all permutations of groups to consider
   all_perms <- as.data.table(expand.grid(lapply(t_weights[c("pev_weights",
-  																																																										"pref_weights", 
-  																																																										"home_weights",
-  																																																										"work_weights",
-  																																																										"vmt_weights",
-  																																																										"vehicle_weights")], function(x) x[, name])))
+                                                            "pref_weights",
+                                                            "home_weights",
+                                                            "work_weights",
+                                                            "vmt_weights",
+                                                            "vehicle_weights")], function(x) x[, name])))
   
   # specify column names
   colnames(all_perms) <- c("pev_type",
-  																									"preferred_loc",
-  																									"power_home", 
-  																									"power_work",
-  																									"schedule_vmt_bin",
-  																									"class_type")  
+                           "preferred_loc",
+                           "power_home",
+                           "power_work",
+                           "schedule_vmt_bin",
+                           "class_type")  
   
   
   #Calculate total weight for each permutation of groups
@@ -103,7 +103,7 @@ evi_fleetGen <- function(evi_raw,
 
   # factor the vehicle class
 		all_perms[, class_type := factor(class_type, levels = c("Sedan",
-																																																										"SUV"))]
+		                                                        "SUV"))]
   ################################################################################################################################
   #Create a fleet data table where each row is the combined characteristics for each vehicle in the fleet.
   ################################################################################################################################
@@ -119,12 +119,12 @@ evi_fleetGen <- function(evi_raw,
   ############ Longest code run time ####################
   fleet <- all_perms[stat_weight!=0,
               do.call("rbind", replicate(round(stat_weight * fleet_size,0),.SD,simplify=FALSE)),
-              by = c("power_work", 
-              							"power_home", 
-              							"preferred_loc",
-              							"pev_type",
-              							"schedule_vmt_bin",
-              							"class_type")]
+              by = c("power_work",
+                     "power_home",
+                     "preferred_loc",
+                     "pev_type",
+                     "schedule_vmt_bin",
+                     "class_type")]
   
   # partition schedule_vmt_bin to actual mileage bins and day of week indicators
   # recast schedule_vmt_bin to integer
@@ -136,9 +136,7 @@ evi_fleetGen <- function(evi_raw,
   #     use binary search fleet creation approach that ensures the correct fleet size at the expense of not obtaining the exact weights desired
   #     else apply small correction to obtain target fleet size if off by <= 0.1% of target fleet size
   fleet_size_error <- sapply(c("weekday", "weekend"), simplify = TRUE, USE.NAMES = TRUE, function(i) {
-    
     abs((nrow(fleet[day_of_week == i])-fleet_size)/fleet_size)
-    
   })
 
   if( max(fleet_size_error) > 0.001 ) {
@@ -175,20 +173,20 @@ evi_fleetGen <- function(evi_raw,
   # Note that the number of unique vids may be less than the fleet size. This is because one vid can apply to more than
   #     one group characteristic permutation
   setkeyv(evi_raw, c("day_of_week",
-  																			"power_work",
-  																			"power_home",
-  																			"preferred_loc",
-  																			"pev_type",
-  																			"schedule_vmt_bin",
-  																			"class_type"))
+                     "power_work",
+                     "power_home",
+                     "preferred_loc",
+                     "pev_type",
+                     "schedule_vmt_bin",
+                     "class_type"))
   
   setkeyv(fleet, c("day_of_week",
-  																	"power_work",
-  																	"power_home",
-  																	"preferred_loc",
-  																	"pev_type",
-  																	"schedule_vmt_bin",
-  																	"class_type"))
+                   "power_work",
+                   "power_home",
+                   "preferred_loc",
+                   "pev_type",
+                   "schedule_vmt_bin",
+                   "class_type"))
   
   # Add VIDs to fleet[]
   # stat weight gets dropped here
