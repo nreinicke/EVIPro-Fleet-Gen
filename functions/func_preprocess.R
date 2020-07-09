@@ -33,7 +33,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		  
 		  # Save charging session data table
 		  if(!dir.exists(outputdir_eviraw)) {
-		    dir.create(outputdir_eviraw)
+		    dir.create(outputdir_eviraw, recursive=T)
 		  }
 		  saveRDS(evi_raw, paste0(outputdir_eviraw,
 		                          temp_list[i], 
@@ -44,7 +44,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		  
 		  # Save load profiles data table
 		  if(!dir.exists(outputdir_loadprofile)) {
-		    dir.create(outputdir_loadprofile)
+		    dir.create(outputdir_loadprofile, recursive=T)
 		  }
 		  saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                    temp_list[i],

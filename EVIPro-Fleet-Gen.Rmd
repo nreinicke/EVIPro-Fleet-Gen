@@ -69,12 +69,11 @@ fwrite(gammaParameters, file="input/gamma_est.csv")
 ```
 
 # Generate .rds files of EVI-Pro charge session data and time series load profiles
-Creates input files which are loaded by loadRawData(). These are preprocess raw EVI-Pro outputs into a format that is easier to work with.
-Only need to do this once. This takes an hour or so and generates about 20GB total in files.
+Creates input files which are loaded by loadRawData(). These are preprocess raw EVI-Pro outputs into a format that is easier to work with. This takes an hour or so and generates about 20GB total in files.
 Note: manage RAM consumption by specifying the number of CPU cores to use. Fewer cores means less RAM.
 ```{r}
 # Set number of CPU cores to make available
-plan(multicore, workers = 12)
+plan(multicore, workers = 13) # Quickest if workers = length(temp_vec). This consumes ~150GB RAM
 
 #Generate list of temperatures that we have for EVI-Pro data that we want to process
 temp_vec <- seq(-20,40, 5)
@@ -106,6 +105,9 @@ For each ambient temperature, this set of scripts generates large .RDS files sto
 ```{r}
 # output folder
 out_folder <- paste0("output/fleetprofiles_",format(Sys.time(), "%d-%b-%Y_%H-%M"),"/")
+if(!dir.exists(out_folder)) {
+  dir.create(out_folder, recursive=T)
+}
 
 # Initialize log file to catch debugging output
 log_file <<- file(paste0(out_folder,"runlog_", format(Sys.time(), "%d-%b-%Y_%H-%M"), ".log"), open = 'a')
