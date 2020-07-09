@@ -47,6 +47,6 @@ openEVI <- function(evi_raw,
                             loc_class = loc_class)
   
   # Return fleet
-  return(evi_fleet$data)
+  return(evi_fleet)
 }
 
