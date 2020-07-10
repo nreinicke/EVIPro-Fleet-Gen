@@ -25,7 +25,7 @@
 #        NOTE: no longer has legacy support for older scripts
 #   2.1: JKC added pev_type back in. Dealing with NAs. Removed public_weights.
 
-#########################################################
+####################### Begin ##################################
 
 evi_fleetGen <- function(evi_raw,
                          fleet_size,
@@ -34,20 +34,20 @@ evi_fleetGen <- function(evi_raw,
                          bin_width = 10,
                          loc_class = "urban") {
   
-  ################################################################################################################################
-  #Create a data table of all potential permutations of fleet characteristics whose weights are user defined
-  ################################################################################################################################
+  ###############################################################################################################################_#
+  #Create a data table of all potential permutations of fleet characteristics whose weights are user defined####
+  ###############################################################################################################################_#
 
   # estimate vmt weights for the day of week
   # paste day of week onto name column, which aslo casts name to character 
-  vmt_list <- sapply(c("weekday", "weekend"), simplify = FALSE, USE.NAMES = TRUE, function(i) {
+  vmt_list <- sapply(c("weekday", "weekend"), simplify = FALSE, USE.NAMES = TRUE, function(day) {
     vmt_wt <- vmt_WeightDistGen(mean_vmt, 
                                 max_vmt = max(evi_raw$schedule_vmt, na.rm = TRUE),
                                 bin_width, 
                                 loc_class, 
-                                i) 
+                                day) 
     
-    vmt_wt[, name := paste(i, name, sep = "_")]
+    vmt_wt[, name := paste(day, name, sep = "_")]
   })
   
   # Bind weekday and weekend vmt weights
@@ -87,7 +87,7 @@ evi_fleetGen <- function(evi_raw,
     setkeyv(all_perms, all_perms_names[[i]])
     all_perms <- all_weights[all_perms]
     all_perms[, stat_weight := stat_weight * weight][, weight := NULL]
-    setnames(all_perms, "name", all_perms_names[[i]])
+    setnames(all_perms, "name", all_perms_names[[j]])
   }
   
   #Factor values in each column. The corresponding factor numeric values correspond to the integer values used by NREL's
@@ -132,6 +132,7 @@ evi_fleetGen <- function(evi_raw,
     abs((nrow(fleet[day_of_week == i])-fleet_size)/fleet_size)
   })
 
+  # check for fleet size errors and correct
   if( max(fleet_size_error) > 0.001 ) {
   
     # Print warning if fleet size error is egregious. This means distribution of fleet characteristics may be
@@ -140,12 +141,12 @@ evi_fleetGen <- function(evi_raw,
   		warning(paste0("Warning: fleet size error of ",as.character(fleet_size_error),". Updating..."))
   	}
     
-    updated_fleet <- lapply(c("weekday", "weekend"), function(i){
+    updated_fleet <- lapply(c("weekday", "weekend"), function(day){
       
       #If too small, add vehicles by randomly duplicating existing vehicles in fleet[]
-      if(nrow(fleet[day_of_week == i]) < fleet_size ) {
-        index <- fleet[day_of_week == i, sample(.I, fleet_size - .N)]
-        fleet <- rbind(fleet[day_of_week == i], fleet[day_of_week == i][index])
+      if(nrow(fleet[day_of_week == day]) < fleet_size ) {
+        index <- fleet[day_of_week == day, sample(.I, fleet_size - .N)]
+        fleet <- rbind(fleet[day_of_week == day], fleet[day_of_week == day][index])
         
       #If too large, randomly delete vehicles from fleet[]
       } else if(nrow(fleet[day_of_week == i]) > fleet_size ) {
@@ -158,9 +159,9 @@ evi_fleetGen <- function(evi_raw,
     fleet <- rbindlist(updated_fleet) 
   }
   
-  ################################################################################################################################
-  #Identify vid that matches each row of characteristics in the fleet data table. Merge in charge session data.
-  ################################################################################################################################
+  ###############################################################################################################################_#
+  #Identify vid that matches each row of characteristics in the fleet data table. Merge in charge session data ####
+  ###############################################################################################################################_#
   
   # Randomly pull and append a vid that has the characteristics specified in the fleet data table.
   # Identify the subset of vids in evi that are associated with each row in your fleet. Randomly pull one of these vids
