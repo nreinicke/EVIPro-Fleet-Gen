@@ -28,16 +28,14 @@ openEVI <- function(evi_raw,
                     home = c(0.20,0.70,0.1),
                     work = c(0,1),
                     loc_class = "urban",
-																				veh_class = c(0.8,0.2)) { # additional var here for sedan/suv
-  
-	 #evi_raw <- loadRawData(temp)
+                    veh_class = c(0.8,0.2)) {
 	
   #Create data table of fleet weights that will work with evi_fleetGen()
   fleet_weights <- create_fleet_weights(pev, # change for suvs
                                         pref,
                                         home,
                                         work,
-  																																						veh_class)
+                                        veh_class)
 
   #Create fleet
   # step through below function
@@ -49,6 +47,6 @@ openEVI <- function(evi_raw,
                             loc_class = loc_class)
   
   # Return fleet
-  return(evi_fleet$data)
+  return(evi_fleet)
 }
 

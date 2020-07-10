@@ -8,13 +8,10 @@
 #   load_profile: load profile for entire data set, generated in calcBaseEVILoad
 
 get_fleet_profiles <- function(evi_fleet, 
-																															fleet_size, 
-																															load_profile) {
+                               fleet_size, 
+                               load_profile) {
   
-		# Load load profiles
-	#	load_profile <- loadProfiles(temp)
-  
-		# calculate fleet size scale
+	# calculate fleet size scale
   if(fleet_size > 50000) {
     fleet_size_scale <- fleet_size / 50000
     fleet_size <- 50000
@@ -24,7 +21,7 @@ get_fleet_profiles <- function(evi_fleet,
   
   # Build list of unique_vid from evi_fleet that we'll use to construct the full load profile
   # Each fleet_id may be associated with multiple vids
-		id_key <- evi_fleet[,.(unique_vid = unique(unique_vid)), by = fleet_id]
+	id_key <- evi_fleet[,.(unique_vid = unique(unique_vid)), by = fleet_id]
   setkey(id_key, unique_vid)
   
   #Subset load profiles specific to those unique_vids in the evi_fleet. This is the full load profile of the fleet

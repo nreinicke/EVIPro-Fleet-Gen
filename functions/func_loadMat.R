@@ -77,7 +77,7 @@ load_MatFiles <- function(path, temperature, ftype) {
     
     # get file paths batch files
     mat_file_paths <- list.files(paste0(path,
-                                        temperature),     
+                                        temperature),
                                  full.names = TRUE,
                                  recursive = TRUE,
                                  pattern = "[1-4].csv")
