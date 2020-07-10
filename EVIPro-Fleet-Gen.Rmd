@@ -197,7 +197,7 @@ loc_class_vec <- list("urban")
 Note: manage RAM consumption by specifying the number of CPU cores to use. Fewer cores means less RAM.
 ```{r}
 # Set number of parallelization workers (cores) globally
-plan(multicore, workers = 6)
+plan(multicore, workers = 12) # 12 workers = ~160GB RAM
 
 # Create df of all fleet characteristics options, excluding temperature. A separate results file is generated for each temperature.
 all_options <- data.table(expand.grid(numveh = fleet_size_vec,
@@ -335,23 +335,20 @@ file_paths <- dir(out_folder, pattern = ".csv", full.names = T)
 
 # Create lazy function to subset results and graph load
 #			*lazy* refers to the fact that this is a wrapper for a workflow rather than a more generalizable function.
-graphFunc <- function(d, f_size, dvmt) {
-	sub_check <- d[fleet_size == f_size & # largest fleet size
+graphFunc <- function(d, f_size, dvmt, vehclass) {
+	sub_check <- d[fleet_size == f_size &
 	mean_dvmt == dvmt &
 	pev_dist == "BEV" &
 	pref_dist == "Home60" &
 	home_access_dist == "HA50" &
 	home_power_dist == "Equal" &
 	work_power_dist == "MostL2" &
-	class_dist == "Sedan",
+	class_dist == vehclass,
 	.(sum_kw = sum(kw)),
 	by = c("dest_type",
 	"dest_chg_level",
 	"time_of_day",
 	"day_of_week")]
-	
-	# round values for ave kw to make graph more readable
-	# sub_check$sum_kw <- round(sub_check$sum_kw, digits = 2)
 	
 	# Show kw by destination, charge type, and vehicle class throughout the day
 	plotResult <- ggplot(data = sub_check, aes(x = time_of_day, y = sum_kw)) +
@@ -365,7 +362,8 @@ graphFunc <- function(d, f_size, dvmt) {
 	                      f_size,
 	                      "and mean daily VMT of",
 	                      dvmt,
-	                      "\npev_dist=BEV, pref_dist=Home60,\nhome_access_dist=HA50, home_power_dist=Equal,\nwork_power_dist=MostL2, class_dist=Sedan")
+	                      "\npev_dist=BEV, pref_dist=Home60,\nhome_access_dist=HA50, home_power_dist=Equal,\nwork_power_dist=MostL2, class_dist=",
+	                      vehclass)
 	     ) +
 	theme(legend.position = "bottom", text = element_text(size = 16))
 	
@@ -374,13 +372,14 @@ graphFunc <- function(d, f_size, dvmt) {
 
 # Loop through each data set, check for NAs and
 # plot L2 charging to check for any issues
-plan(multicore, workers=7)
+plan(multicore, workers=12)
 plot_results <- future_lapply(file_paths, function(i) {
 	d_output <- fread(i)
 	
 	# Uniform dist to randomly pick fleet size and dvmt to spot check
 	pick_fleet_size <- round(runif(1,1,3))
 	pick_dvmt <- round(runif(1,1,3))
+	pick_class <- round(runif(1,1,3))
 	
 	# Check for NAs
 	tryCatch(na.fail(d_output),error = function(x) cat(paste0("\nNAs found in ",i,", for fleet size ",as.character(fleet_size_vec[[pick_fleet_size]])," and DVMT ",as.character(mean_dvmt_vec[[pick_dvmt]])),file=log_file, append=T))
@@ -388,7 +387,8 @@ plot_results <- future_lapply(file_paths, function(i) {
 	# Generate plot
 	result <- graphFunc(d_output,
 	                    f_size = fleet_size_vec[[pick_fleet_size]],
-	                    dvmt = mean_dvmt_vec[[pick_dvmt]])
+	                    dvmt = mean_dvmt_vec[[pick_dvmt]],
+	                    vehclass = names(veh_class_vec)[[pick_class]])
 	
 	return(result)
 })
