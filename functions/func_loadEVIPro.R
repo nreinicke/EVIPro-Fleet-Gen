@@ -22,11 +22,11 @@
 #   v1.6: jkc: Enable this to apply to new raw evi data set that includes ambient temperature variation
 
 load_EVIPro <- function(target_dir,
-																								temp, 
-																								dvmt_file,
-																								vmt_bin_width = 10) {
+                        temp, 
+                        dvmt_file,
+                        vmt_bin_width = 10) {
   # source loadmat function
-  source("functions/func_LoadMat.R")
+  source("functions/func_loadMat.R")
   
   evi <- load_MatFiles(target_dir, temp, ftype = "csv")
   

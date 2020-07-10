@@ -28,7 +28,7 @@ vmt_WeightDistGen <- function(mean_vmt, max_vmt, bin_width, loc_class, dow) {
   # vmt distribution of the fleet
   
   # load the estimated gamma distribution parameters from est_VMT_parameters.Rmd 
-  param <- fread("input_files/gamma_est.csv")
+  param <- fread("input/gamma_est.csv")
  
   # extract rate estimate and use it to get the shape for the given mean
   rate.var <- param[urban == loc_class & day_of_week == dow, rate]

@@ -2,9 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-
-outputs/
-Archive/
-functions/Archive/
 *.html
 *.Rproj
+input/
+output/
+Archive/
+functions/Archive/
