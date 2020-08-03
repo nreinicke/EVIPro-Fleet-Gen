@@ -26,20 +26,31 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		# Parallelize lapply across temperatures
 		future_lapply(seq(1:length(temp_list)), function(i) {
 		  # load charging session data into data table
-		  evi_raw <- load_EVIPro(inputdir_evipro,
-		                         temp_list[i],
-		                         inputdir_chts,
-		                         vmt_bin_size)
 		  
-		  # Save charging session data table
-		  if(!dir.exists(outputdir_eviraw)) {
-		    dir.create(outputdir_eviraw, recursive=T)
-		  }
-		  saveRDS(evi_raw, paste0(outputdir_eviraw,
-		                          temp_list[i], 
-		                          ".rds"))
+		  print(paste0("working on temp ", temp_list[i]))
+		  
+			evi_raw_file <- paste0(outputdir_eviraw, temp_list[i], ".rds")
+			if(!file.exists(evi_raw_file)) {
+			  print("no existing evipro raw file found, preprocessing..")
+  		  evi_raw <- load_EVIPro(inputdir_evipro,
+  		                         temp_list[i],
+  		                         inputdir_chts,
+  		                         vmt_bin_size)
+  		  
+  		  # Save charging session data table
+  		  if(!dir.exists(outputdir_eviraw)) {
+  		    dir.create(outputdir_eviraw, recursive=T)
+  		  }
+  		  saveRDS(evi_raw, evi_raw_file) 
+			}
+			else {
+			  print("found existing evipro raw file, loading from file..")
+			  evi_raw <- readRDS(evi_raw_file)
+			}
+		  
 		  
 		  # Create load profiles
+			print("building load profiles..")
 		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
 		  
 		  # Save load profiles data table
