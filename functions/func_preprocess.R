@@ -9,10 +9,8 @@
 # load necessary packages
 library(future.apply)
 library(data.table)
+library(parallel)
 
-# source functions
-source("functions/func_loadEVIPro.R") # loads EVIPro data and stores in a single data table
-source("functions/func_calcBaseEVILoad.R") # pre-calculates load profile for all unique_vid in evi_raw
 
 #Define function
 preprocess_NREL_data <- function(temp_list,              # vector of character strings of ambient temperature values (i.e. c("20C","30C","35C"))
@@ -24,14 +22,17 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  loadprofile_timestep) { # float of time step in decimal hours for calcBaseEVILoad() function
 		
 		# Parallelize lapply across temperatures
-		future_lapply(seq(1:length(temp_list)), function(i) {
+    cl <- makeCluster(13, outfile="")
+		parLapply(cl, seq(1:length(temp_list)), function(i) {
+		  print(paste0("working on temperature ", temp_list[i]))
+      # source functions
+      source("functions/func_loadEVIPro.R") # loads EVIPro data and stores in a single data table
+      source("functions/func_calcBaseEVILoad.R") # pre-calculates load profile for all unique_vid in evi_raw
+		  
 		  # load charging session data into data table
-		  
-		  print(paste0("working on temp ", temp_list[i]))
-		  
 			evi_raw_file <- paste0(outputdir_eviraw, temp_list[i], ".rds")
 			if(!file.exists(evi_raw_file)) {
-			  print("no existing evipro raw file found, preprocessing..")
+  			print("could not find existing evi raw file, computing..")
   		  evi_raw <- load_EVIPro(inputdir_evipro,
   		                         temp_list[i],
   		                         inputdir_chts,
@@ -44,13 +45,12 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
   		  saveRDS(evi_raw, evi_raw_file) 
 			}
 			else {
-			  print("found existing evipro raw file, loading from file..")
+  			print("found existing evi raw file, loading from file..")
 			  evi_raw <- readRDS(evi_raw_file)
 			}
 		  
 		  
 		  # Create load profiles
-			print("building load profiles..")
 		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
 		  
 		  # Save load profiles data table
