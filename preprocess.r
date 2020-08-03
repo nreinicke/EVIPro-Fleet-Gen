@@ -8,6 +8,9 @@ options(future.globals.maxSize = 25000 * 1024^2) # Set max RAM allowed for globa
 
 source("functions/func_preprocess.R") # Does some pre-processing of data sent by NREL and saves as .rds files
 
+# Set number of CPU cores to make available
+plan(multicore, workers = 13) # Quickest if workers = length(temp_vec). This consumes ~150GB RAM
+
 #Generate list of temperatures that we have for EVI-Pro data that we want to process
 temp_vec <- seq(-20,40, 5)
 temp_vec <- paste0(temp_vec, "C")
