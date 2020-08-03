@@ -13,6 +13,7 @@ temp_vec <- seq(-20,40, 5)
 temp_vec <- paste0(temp_vec, "C")
 
 # Sedans: nothing returned. Results saved in specified output directories
+print("working on sedan data")
 preprocess_NREL_data(temp_list = temp_vec,
                      inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_sedan/",
                      inputdir_chts = "input/chts_dvmt.csv",
@@ -22,6 +23,7 @@ preprocess_NREL_data(temp_list = temp_vec,
                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
 
 # SUVs: nothing returned. Results saved in specified output directories
+print("working on SUV data")
 preprocess_NREL_data(temp_list = temp_vec,
                      inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_suv/",
                      inputdir_chts = "input/chts_dvmt.csv",
