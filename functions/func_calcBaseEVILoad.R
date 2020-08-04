@@ -19,10 +19,16 @@ source("functions/func_joinOn.R") #Fast join function
 source("functions/func_strEval.R") #String evulation function
 source("functions/func_pp.R") #Alias for paste
 
-calcBaseEVILoad <- function(activity_data,time_step) {
+calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
   #Initialize load profile data table using subset of columns of evi_raw[]
-  activity_data <- activity_data[,.(unique_vid,pev_type,schedule_vmt,dest_type,dest_chg_level,start_time,end_time_chg,avg_kw,kwh)]
+  if(load_shift=="max_delay"){
+    activity_data$start_time <- activity_data$start_time_late
+  }
+  else {
+    print("load shift parameter not understood. using min delay as default")
+  }
   
+  activity_data <- activity_data[,.(unique_vid,pev_type,schedule_vmt,dest_type,dest_chg_level,start_time,end_time_chg,avg_kw,kwh)]
   setkey(activity_data,unique_vid,start_time)
   
   #Create a unique key to use for creating a time sequence for each charging event

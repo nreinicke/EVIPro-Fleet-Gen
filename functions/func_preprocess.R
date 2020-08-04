@@ -49,6 +49,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			  evi_raw <- readRDS(evi_raw_file)
 			}
 		  
+			load_shift <- "max_delay"
 		  
 		  # Create load profiles
 		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
@@ -59,6 +60,8 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		  }
 		  saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                    temp_list[i],
+		                                    "_",
+		                                    load_shift,
 		                                    ".rds"))
 		})
 
