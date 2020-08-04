@@ -22,6 +22,7 @@ preprocess_NREL_data(temp_list = temp_vec,
                      outputdir_eviraw = "input/preprocessed/evi_raw_sedan/",
                      outputdir_loadprofile = "input/preprocessed/load_profile_sedan/",
                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
+                     load_shift = "max_delay", # string of load shift strategy 
                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
 
 # SUVs: nothing returned. Results saved in specified output directories
@@ -32,4 +33,5 @@ preprocess_NREL_data(temp_list = temp_vec,
                      outputdir_eviraw = "input/preprocessed/evi_raw_suv/",
                      outputdir_loadprofile = "input/preprocessed/load_profile_suv/",
                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
+                     load_shift = "max_delay", # string of load shift strategy 
                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile

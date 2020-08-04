@@ -1,4 +1,4 @@
-loadRawData <- function(temp) {
+loadRawData <- function(temp, load_shift) {
 					
 					# Get EVI-Pro charge session data -------------------------------------------------------
 					evi_raw_sedan <- readRDS(paste0("input/preprocessed/evi_raw_sedan/", temp, ".rds"))
@@ -24,13 +24,13 @@ loadRawData <- function(temp) {
 					gc(rm(evi_raw_suv, evi_raw_sedan))
 					
 					# Get pre-calculated load profiles --------------------------------------------------------
-					evi_load_profiles <- readRDS(paste0("input/preprocessed/load_profile_sedan/", temp, ".rds"))
+					evi_load_profiles <- readRDS(paste0("input/preprocessed/load_profile_sedan/", temp, "_", load_shift, ".rds"))
 
 					# add vehicle class
 					evi_load_profiles[, "class_type" := "Sedan"]
 
 					# Repeat for SUVs
-					evi_load_profiles_suv <- readRDS(paste0("input/preprocessed/load_profile_suv/", temp, ".rds"))
+					evi_load_profiles_suv <- readRDS(paste0("input/preprocessed/load_profile_suv/", temp, "_", load_shift, ".rds"))
 
 					# add vehicle class
 					evi_load_profiles_suv[, "class_type" := "SUV"]

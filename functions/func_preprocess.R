@@ -19,6 +19,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  outputdir_eviraw,       # character string of directory to save raw evi .rds files
                                  outputdir_loadprofile,  # character string of directory to save raw load profile .rds files
                                  vmt_bin_size,           # integer of vmt bin size for load_EVIPro() function
+                                 load_shift,             # string of load shift strategy 
                                  loadprofile_timestep) { # float of time step in decimal hours for calcBaseEVILoad() function
 		
 		# Parallelize lapply across temperatures
@@ -50,8 +51,6 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			  evi_raw <- readRDS(evi_raw_file)
 			}
 		  
-			load_shift <- "max_delay"
-		  
 		  # Create load profiles
 		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, load_shift)
 		  
@@ -65,5 +64,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		                                    load_shift,
 		                                    ".rds"))
 		})
+		
+		stopCluster(cl)
 
 }
