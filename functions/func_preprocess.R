@@ -26,6 +26,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		parLapply(cl, seq(1:length(temp_list)), function(i) {
 		  print(paste0("working on temperature ", temp_list[i]))
       # source functions
+      library(data.table) 
       source("functions/func_loadEVIPro.R") # loads EVIPro data and stores in a single data table
       source("functions/func_calcBaseEVILoad.R") # pre-calculates load profile for all unique_vid in evi_raw
 		  
@@ -52,7 +53,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			load_shift <- "max_delay"
 		  
 		  # Create load profiles
-		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
+		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, load_shift)
 		  
 		  # Save load profiles data table
 		  if(!dir.exists(outputdir_loadprofile)) {

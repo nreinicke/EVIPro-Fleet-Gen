@@ -23,6 +23,7 @@ calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
   #Initialize load profile data table using subset of columns of evi_raw[]
   if(load_shift=="max_delay"){
     activity_data$start_time <- activity_data$start_time_late
+    activity_data$end_time_chg <- activity_data$end_time_prk
   }
   else {
     print("load shift parameter not understood. using min delay as default")
