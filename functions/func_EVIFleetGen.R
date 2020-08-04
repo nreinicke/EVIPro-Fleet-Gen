@@ -87,7 +87,7 @@ evi_fleetGen <- function(evi_raw,
     setkeyv(all_perms, all_perms_names[[i]])
     all_perms <- all_weights[all_perms]
     all_perms[, stat_weight := stat_weight * weight][, weight := NULL]
-    setnames(all_perms, "name", all_perms_names[[j]])
+    setnames(all_perms, "name", all_perms_names[[i]])
   }
   
   #Factor values in each column. The corresponding factor numeric values correspond to the integer values used by NREL's
