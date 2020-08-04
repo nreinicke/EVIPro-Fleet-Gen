@@ -35,6 +35,19 @@ getNames <- function(vec, option) {
   return(names(Filter(length, out)))
 }
 
+# output folder
+out_folder <- paste0("output/fleetprofiles_",format(Sys.time(), "%d-%b-%Y_%H-%M"),"/")
+if(!dir.exists(out_folder)) {
+  dir.create(out_folder, recursive=T)
+}
+
+# Initialize log file to catch debugging output
+log_file <<- file(paste0(out_folder,"runlog_", format(Sys.time(), "%d-%b-%Y_%H-%M"), ".log"), open = 'a')
+
+# Indicate whether to include verbose output for debugging
+#   Note this is not well implemented yet.
+debugFleetGen <- T
+
 temp_vec <- c("-20C",
               "-10C",
               "0C",
