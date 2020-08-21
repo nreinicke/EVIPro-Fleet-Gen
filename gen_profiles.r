@@ -119,7 +119,7 @@ work_power_vec <- list("MostL2" = c(0.2, 0.8), # Most workplace charging is L2
 #		Can only choose one.
 loc_class_vec <- list("urban")
 
-load_shift <- "min_delay"
+load_shift <- "max_delay"
 
 plan(multicore, workers = 12) # 12 workers = ~160GB RAM
 
