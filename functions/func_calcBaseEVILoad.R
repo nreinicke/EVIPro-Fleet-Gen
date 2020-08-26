@@ -25,6 +25,10 @@ calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
     activity_data$start_time <- activity_data$start_time_late
     activity_data$end_time_chg <- activity_data$end_time_prk
   }
+  else if(load_shift=="load_leveling") {
+    activity_data$end_time_chg <- activity_data$end_time_prk
+    activity_data$avg_kw <- (activity_data$kwh / ((activity_data$end_time_chg - activity_data$start_time)*24))
+  }
   else {
     print("load shift parameter not understood. using min delay as default")
   }
