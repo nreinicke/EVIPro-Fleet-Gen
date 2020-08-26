@@ -29,6 +29,19 @@ calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
     activity_data$end_time_chg <- activity_data$end_time_prk
     activity_data$avg_kw <- (activity_data$kwh / ((activity_data$end_time_chg - activity_data$start_time)*24))
   }
+  else if(load_shift=="timed_charging") {
+    # desired time to start charging in days
+    desired_time <- 1.0
+    
+    # if the desired time allows the vehicle to achieve a full charge in the given
+    # dwell time, adjust the starting time and ending time
+    new_charge_end <- desired_time + (activity_data$end_time_chg - activity_data$start_time)
+    activity_data$start_time[new_charge_end <= activity_data$end_time_prk] <- desired_time
+    activity_data$end_time_chg <- ifelse(activity_data$start_time == desired_time, new_charge_end, activity_data$end_time_chg)
+    
+    # garbage collection
+    gc(rm(new_charge_end, desired_time))
+  }
   else {
     print("load shift parameter not understood. using min delay as default")
   }
