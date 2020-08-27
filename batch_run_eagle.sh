@@ -11,6 +11,6 @@
 
 # MODIFY HERE according to your environment setup
 module purge
-. activate ~/.conda-envs/r-env
+. activate /projects/aes4t/.conda-envs/r-env
 
 Rscript gen_profiles.r 
