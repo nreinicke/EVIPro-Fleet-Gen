@@ -11,7 +11,7 @@ source("functions/func_loadRawData.R") # Loads pre-processed EVI-Pro model data 
 source("functions/func_loadEVIPro.R") #loads raw EVIPro model output data and stores in a single data table
 
 #Generate list of temperatures that we have for EVI-Pro data that we want to process
-temp_vec <- seq(-20,40, 5)
+temp_vec <- seq(-20,40, 10)
 temp_vec <- paste0(temp_vec, "C")
 
 # Sedans: nothing returned. Results saved in specified output directories
