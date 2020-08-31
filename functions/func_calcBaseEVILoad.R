@@ -29,8 +29,11 @@ calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
     # set the charge end time to the end of parking time
     activity_data$end_time_chg <- activity_data$end_time_prk
     
-    # calculated the charge time in hours 
-    charge_time_hours <- (activity_data$end_time_chg - activity_data$start_time)*24
+    # calculated the charge time
+    charge_time_hours <- activity_data$end_time_chg - activity_data$start_time
+    
+    # convert to hours
+    charge_time_hours <- charge_time_hours * 24
     
     # calculate the lowest amount of energy needed to charge the vehicle over the new charge time
     activity_data$avg_kw <- activity_data$kwh / charge_time_hours
