@@ -26,8 +26,17 @@ calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
     activity_data$end_time_chg <- activity_data$end_time_prk
   }
   else if(load_shift=="load_leveling") {
+    # set the charge end time to the end of parking time
     activity_data$end_time_chg <- activity_data$end_time_prk
-    activity_data$avg_kw <- (activity_data$kwh / ((activity_data$end_time_chg - activity_data$start_time)*24))
+    
+    # calculated the charge time in hours 
+    charge_time_hours <- (activity_data$end_time_chg - activity_data$start_time)*24
+    
+    # calculate the lowest amount of energy needed to charge the vehicle over the new charge time
+    activity_data$avg_kw <- activity_data$kwh / charge_time_hours
+    
+    # garbage collection
+    gc(rm(charge_time_hours))
   }
   else if(load_shift=="timed_charging") {
     # desired time to start charging in days
