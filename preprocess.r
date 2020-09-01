@@ -34,4 +34,5 @@ preprocess_NREL_data(temp_list = temp_vec,
                      outputdir_loadprofile = "input/preprocessed/load_profile_suv/",
                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
                      load_shift = "max_delay", # string of load shift strategy 
-                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
+                     loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
+                     temp_group_size = 4) # The number of temperatures that the program will work on at a time
