@@ -19,8 +19,9 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  outputdir_eviraw,       # character string of directory to save raw evi .rds files
                                  outputdir_loadprofile,  # character string of directory to save raw load profile .rds files
                                  vmt_bin_size,           # integer of vmt bin size for load_EVIPro() function
-                                 load_shift,             # string of load shift strategy 
                                  loadprofile_timestep,   # float of time step in decimal hours for calcBaseEVILoad() function
+                                 public_load_shift,      # string of work/public load shift strategy 
+                                 home_load_shift,        # string of home load shift strategy 
                                  temp_group_size) {      # integer the number of temperatures to calculate in parallel 
 		
   
@@ -59,7 +60,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			  }
 		  
 		    # Create load profiles
-		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, load_shift)
+		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, public_load_shift, home_load_shift)
 		  
 		    # Save load profiles data table
 		    if(!dir.exists(outputdir_loadprofile)) {

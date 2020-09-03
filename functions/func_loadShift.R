@@ -42,10 +42,11 @@ timedCharging <- function(activity_data, index, desired_time) {
 }
 
 loadShift <- function(activity_data, public_strategy, home_strategy, desired_time) {
+  # default value for desired time with respect to the time shift strategy is 1.0
   if(missing(desired_time)) {
     desired_time <- 1.0
   }
-  
+  # create logical vectors to identify which events to alter depending on destination type
   public_index <- activity_data$dest_type!='Home'
   home_index <- activity_data$dest_type=='Home'
     

@@ -18,46 +18,14 @@
 source("functions/func_joinOn.R") #Fast join function
 source("functions/func_strEval.R") #String evulation function
 source("functions/func_pp.R") #Alias for paste
+source("functions/func_loadShift.R") #Alias for paste
 
-calcBaseEVILoad <- function(activity_data,time_step,load_shift) {
-  #Initialize load profile data table using subset of columns of evi_raw[]
-  if(load_shift=="max_delay"){
-    activity_data$start_time <- activity_data$start_time_late
-    activity_data$end_time_chg <- activity_data$end_time_prk
-  }
-  else if(load_shift=="load_leveling") {
-    # set the charge end time to the end of parking time
-    activity_data$end_time_chg <- activity_data$end_time_prk
-    
-    # calculated the charge time
-    charge_time_hours <- activity_data$end_time_chg - activity_data$start_time
-    
-    # convert to hours
-    charge_time_hours <- charge_time_hours * 24
-    
-    # calculate the lowest amount of energy needed to charge the vehicle over the new charge time
-    activity_data$avg_kw <- activity_data$kwh / charge_time_hours
-    
-    # garbage collection
-    gc(rm(charge_time_hours))
-  }
-  else if(load_shift=="timed_charging") {
-    # desired time to start charging in days
-    desired_time <- 1.0
-    
-    # if the desired time allows the vehicle to achieve a full charge in the given
-    # dwell time, adjust the starting time and ending time
-    new_charge_end <- desired_time + (activity_data$end_time_chg - activity_data$start_time)
-    activity_data$start_time[new_charge_end <= activity_data$end_time_prk] <- desired_time
-    activity_data$end_time_chg <- ifelse(activity_data$start_time == desired_time, new_charge_end, activity_data$end_time_chg)
-    
-    # garbage collection
-    gc(rm(new_charge_end, desired_time))
-  }
-  else {
-    print("load shift parameter not understood. using min delay as default")
-  }
+calcBaseEVILoad <- function(activity_data,time_step,public_load_shift,home_load_shift) {
   
+  # mutate the load profile data according to the desired load shift strategies for public and home locations
+  activity_data <- loadShift(activity_data, public_load_shift, home_load_shift)
+  
+  #Initialize load profile data table using subset of columns of evi_raw[]
   activity_data <- activity_data[,.(unique_vid,pev_type,schedule_vmt,dest_type,dest_chg_level,start_time,end_time_chg,avg_kw,kwh)]
   setkey(activity_data,unique_vid,start_time)
   
