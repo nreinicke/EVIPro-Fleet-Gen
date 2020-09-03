@@ -18,7 +18,7 @@
 source("functions/func_joinOn.R") #Fast join function
 source("functions/func_strEval.R") #String evulation function
 source("functions/func_pp.R") #Alias for paste
-source("functions/func_loadShift.R") #Alias for paste
+source("functions/func_loadShift.R") #load flexibility function
 
 calcBaseEVILoad <- function(activity_data,time_step,public_load_shift,home_load_shift) {
   

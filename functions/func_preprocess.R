@@ -68,8 +68,10 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		    }
 		    saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                      temp_groups[[c(group, i)]],
-		                                      "_",
-		                                      load_shift,
+		                                      "_public-",
+		                                      public_load_shift,
+		                                      "_home-",
+		                                      home_load_shift,
 		                                      ".rds"))
 		  })
     }
