@@ -23,7 +23,8 @@ temp_vec <- paste0(temp_vec, "C")
 #                     outputdir_loadprofile = "input/preprocessed/load_profile_sedan/",
 #                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
 #                     load_shift = "max_delay", # string of load shift strategy 
-#                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
+#                     loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
+#                     temp_group_size = 4) # The number of temperatures that the program will work on at a time
 
 # SUVs: nothing returned. Results saved in specified output directories
 print("working on SUV data")
