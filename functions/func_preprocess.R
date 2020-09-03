@@ -22,7 +22,8 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  loadprofile_timestep,   # float of time step in decimal hours for calcBaseEVILoad() function
                                  public_load_shift,      # string of work/public load shift strategy 
                                  home_load_shift,        # string of home load shift strategy 
-                                 temp_group_size) {      # integer the number of temperatures to calculate in parallel 
+                                 temp_group_size,        # integer the number of temperatures to calculate in parallel
+                                 desired_time) {         # desired time specifically for the timed charging load shift strategy
 		
   
     # split the temp vector into groups of four
@@ -60,7 +61,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			  }
 		  
 		    # Create load profiles
-		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, public_load_shift, home_load_shift)
+		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, public_load_shift, home_load_shift, desired_time)
 		  
 		    # Save load profiles data table
 		    if(!dir.exists(outputdir_loadprofile)) {

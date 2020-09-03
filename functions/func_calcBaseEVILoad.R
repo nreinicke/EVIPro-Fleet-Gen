@@ -20,10 +20,10 @@ source("functions/func_strEval.R") #String evulation function
 source("functions/func_pp.R") #Alias for paste
 source("functions/func_loadShift.R") #load flexibility function
 
-calcBaseEVILoad <- function(activity_data,time_step,public_load_shift,home_load_shift) {
+calcBaseEVILoad <- function(activity_data,time_step,public_load_shift,home_load_shift, desired_time) {
   
   # mutate the load profile data according to the desired load shift strategies for public and home locations
-  activity_data <- loadShift(activity_data, public_load_shift, home_load_shift)
+  activity_data <- loadShift(activity_data, public_load_shift, home_load_shift, desired_time)
   
   #Initialize load profile data table using subset of columns of evi_raw[]
   activity_data <- activity_data[,.(unique_vid,pev_type,schedule_vmt,dest_type,dest_chg_level,start_time,end_time_chg,avg_kw,kwh)]

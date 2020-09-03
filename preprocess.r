@@ -25,7 +25,8 @@ temp_vec <- paste0(temp_vec, "C")
 #                     loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
 #                     public_load_shift = "max_delay", # string of load shift strategy 
 #                     home_load_shift = "max_delay", # string of load shift strategy 
-#                     temp_group_size = 4) # The number of temperatures that the program will work on at a time
+#                     temp_group_size = 4, # The number of temperatures that the program will work on at a time
+#                     desired_time = 1.0) # desired time specifically for the timed charging load shift strategy
 
 # SUVs: nothing returned. Results saved in specified output directories
 print("working on SUV data")
@@ -38,4 +39,5 @@ preprocess_NREL_data(temp_list = temp_vec,
                      loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
                      public_load_shift = "load_leveling", # string of load shift strategy 
                      home_load_shift = "timed_charging", # string of load shift strategy 
-                     temp_group_size = 4) # The number of temperatures that the program will work on at a time
+                     temp_group_size = 4, # The number of temperatures that the program will work on at a time
+                     desired_time = 1.0) # desired time specifically for the timed charging load shift strategy
