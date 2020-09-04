@@ -20,7 +20,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  outputdir_loadprofile,  # character string of directory to save raw load profile .rds files
                                  vmt_bin_size,           # integer of vmt bin size for load_EVIPro() function
                                  loadprofile_timestep,   # float of time step in decimal hours for calcBaseEVILoad() function
-                                 public_load_shift,      # string of work/public load shift strategy 
+                                 work_load_shift,        # string of work load shift strategy 
                                  home_load_shift,        # string of home load shift strategy 
                                  temp_group_size,        # integer the number of temperatures to calculate in parallel
                                  desired_time) {         # desired time specifically for the timed charging load shift strategy
@@ -61,7 +61,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 			  }
 		  
 		    # Create load profiles
-		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, public_load_shift, home_load_shift, desired_time)
+		    evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep, work_load_shift, home_load_shift, desired_time)
 		  
 		    # Save load profiles data table
 		    if(!dir.exists(outputdir_loadprofile)) {
@@ -69,8 +69,8 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		    }
 		    saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                      temp_groups[[c(group, i)]],
-		                                      "_public-",
-		                                      public_load_shift,
+		                                      "_work-",
+		                                      work_load_shift,
 		                                      "_home-",
 		                                      home_load_shift,
 		                                      ".rds"))

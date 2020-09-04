@@ -41,30 +41,30 @@ timedCharging <- function(activity_data, index, desired_time) {
   return(activity_data)
 }
 
-loadShift <- function(activity_data, public_strategy, home_strategy, desired_time) {
+loadShift <- function(activity_data, work_strategy, home_strategy, desired_time) {
   # default value for desired time with respect to the time shift strategy is 1.0
   if(missing(desired_time)) {
     desired_time <- 1.0
   }
   # create logical vectors to identify which events to alter depending on destination type
-  public_index <- activity_data$dest_type!='Home'
+  work_index <- activity_data$dest_type=='Work'
   home_index <- activity_data$dest_type=='Home'
     
-  # mutate data according to the desired public strategy
-  if(public_strategy == 'min_delay') {
-    print("public and work locations shifted using MIN DELAY")
+  # mutate data according to the desired work strategy
+  if(work_strategy == 'min_delay') {
+    print("work locations shifted using MIN DELAY")
   }
-  else if(public_strategy == 'max_delay') {
-    activity_data <- maxDelay(activity_data, public_index)
-    print("public and work locations shifted using MAX DELAY")
+  else if(work_strategy == 'max_delay') {
+    activity_data <- maxDelay(activity_data, work_index)
+    print("work locations shifted using MAX DELAY")
   }
-  else if(public_strategy == 'load_leveling') {
-    activity_data <- loadLeveling(activity_data, public_index)
-    print("public and work locations shifted using LOAD LEVELING")
+  else if(work_strategy == 'load_leveling') {
+    activity_data <- loadLeveling(activity_data, work_index)
+    print("work locations shifted using LOAD LEVELING")
   }
-  else if(public_strategy == 'timed_charging') {
-    activity_data <- timedCharging(activity_data, public_index, desired_time)
-    print(paste0("public and work locations shifted using TIMED CHARGING with desired time: ", desired_time))
+  else if(work_strategy == 'timed_charging') {
+    activity_data <- timedCharging(activity_data, work_index, desired_time)
+    print(paste0("work locations shifted using TIMED CHARGING with desired time: ", desired_time))
   }
   else {
     print("public load shift parameter not understood. using min delay as default")
