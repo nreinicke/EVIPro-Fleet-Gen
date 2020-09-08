@@ -26,7 +26,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  desired_time) {         # desired time specifically for the timed charging load shift strategy
 		
   
-    # split the temp vector into groups of four
+    # split the temp vector into groups of the desired size
     temp_groups <- split(temp_list, ceiling(seq_along(temp_list)/temp_group_size))
   
 		# Parallelize lapply across temperatures in groups according to group size
@@ -69,9 +69,9 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		    }
 		    saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                      temp_groups[[c(group, i)]],
-		                                      "_work-",
+		                                      "_work_",
 		                                      work_load_shift,
-		                                      "_home-",
+		                                      "_home_",
 		                                      home_load_shift,
 		                                      ".rds"))
 		  })
