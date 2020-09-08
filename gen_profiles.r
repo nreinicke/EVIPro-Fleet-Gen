@@ -243,13 +243,19 @@ lapply(temp_vec, function(temp) {
   fleet_load[, fleet_size := as.integer(fleet_size)]
   fleet_load[, mean_dvmt := as.integer(mean_dvmt)]
   
+  # Add load shift columns -----------------------------------------------------------------------------
+  fleet_load$res_charging <- home_load_shift
+  fleet_load$work_charging <- work_load_shift
+  
   # Save output ----------------------------------------------------------------------------------------
   fwrite(fleet_load,
          file = paste0(out_folder,
                        gsub("-", "", Sys.Date()), "_", # date the run
                        temp,
-                       "_",
-                       load_shift,
+                       "_work_",
+                       work_load_shift,
+                       "_home_",
+                       home_load_shift,
                        ".csv"))
 }) # end of temp vec lapply
 end_time = Sys.time()
