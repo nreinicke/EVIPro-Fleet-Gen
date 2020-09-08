@@ -250,7 +250,6 @@ lapply(temp_vec, function(temp) {
   # Save output ----------------------------------------------------------------------------------------
   fwrite(fleet_load,
          file = paste0(out_folder,
-                       gsub("-", "", Sys.Date()), "_", # date the run
                        temp,
                        "_work_",
                        work_load_shift,
