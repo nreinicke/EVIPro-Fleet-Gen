@@ -119,7 +119,8 @@ work_power_vec <- list("MostL2" = c(0.2, 0.8), # Most workplace charging is L2
 #		Can only choose one.
 loc_class_vec <- list("urban")
 
-load_shift <- "max_delay"
+work_load_shift <- "max_delay"
+home_load_shift <- "max_delay"
 
 plan(multicore, workers = 12) # 12 workers = ~160GB RAM
 
@@ -145,7 +146,7 @@ print("starting lapply..")
 lapply(temp_vec, function(temp) {
   
   # Load raw charging session and load profile .rds files
-  raw_data <- loadRawData(temp, load_shift)
+  raw_data <- loadRawData(temp, work_load_shift, home_load_shift)
   
   # Create load profiles by looping over all permutations of options
   fleet_load <- future_lapply(all_options_list, function(options_list) {
