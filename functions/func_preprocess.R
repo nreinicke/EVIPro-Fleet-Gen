@@ -31,6 +31,7 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
   
 		# Parallelize lapply across temperatures in groups according to group size
     cl <- makeCluster(13, outfile="")
+    clusterExport(cl=cl, c('work_shift_vec', 'home_shift_vec', 'home_shift', 'work_shift'))
     
     for(group in 1:length(temp_groups)) {
 		  parLapply(cl, seq(1:length(temp_groups[[group]])), function(i) {
