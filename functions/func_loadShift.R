@@ -12,6 +12,8 @@ maxDelay <- function(activity_data, index) {
 
 loadLeveling <- function(activity_data, index) {
   
+  index <- index & (activity_data$end_time_chg != activity_data$start_time) & (activity_data$kwh != 0)
+  
   # adjust the end charge time to equal the end of parking for all values in the given index
   activity_data$end_time_chg[index] <- activity_data$end_time_prk[index]
   
