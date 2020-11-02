@@ -22,33 +22,38 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  outputdir_loadprofile,  # character string of directory to save raw load profile .rds files
                                  vmt_bin_size,           # integer of vmt bin size for load_EVIPro() function
                                  loadprofile_timestep) { # float of time step in decimal hours for calcBaseEVILoad() function
-		
-		# Parallelize lapply across temperatures
-		future_lapply(seq(1:length(temp_list)), function(i) {
-		  # load charging session data into data table
-		  evi_raw <- load_EVIPro(inputdir_evipro,
-		                         temp_list[i],
-		                         inputdir_chts,
-		                         vmt_bin_size)
-		  
-		  # Save charging session data table
-		  if(!dir.exists(outputdir_eviraw)) {
-		    dir.create(outputdir_eviraw, recursive=T)
-		  }
-		  saveRDS(evi_raw, paste0(outputdir_eviraw,
-		                          temp_list[i], 
-		                          ".rds"))
-		  
-		  # Create load profiles
-		  evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
-		  
-		  # Save load profiles data table
-		  if(!dir.exists(outputdir_loadprofile)) {
-		    dir.create(outputdir_loadprofile, recursive=T)
-		  }
-		  saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
-		                                    temp_list[i],
-		                                    ".rds"))
-		})
+  
+  # split the temp vector into groups of the desired size
+  temp_groups <- split(temp_list, ceiling(seq_along(temp_list)/4))
+  
+  for(group in 1:length(temp_groups)) {
+    # Parallelize lapply across temperatures
+    future_lapply(seq(1:length(temp_groups[[group]])), function(i) {
+      # load charging session data into data table
+      evi_raw <- load_EVIPro(inputdir_evipro,
+                             temp_groups[[c(group, i)]],
+                             inputdir_chts,
+                             vmt_bin_size)
+      
+      # Save charging session data table
+      if(!dir.exists(outputdir_eviraw)) {
+        dir.create(outputdir_eviraw, recursive=T)
+      }
+      saveRDS(evi_raw, paste0(outputdir_eviraw,
+                              temp_groups[[c(group, i)]], 
+                              ".rds"))
+      
+      # Create load profiles
+      evi_load_profiles <- calcBaseEVILoad(evi_raw, loadprofile_timestep)
+      
+      # Save load profiles data table
+      if(!dir.exists(outputdir_loadprofile)) {
+        dir.create(outputdir_loadprofile, recursive=T)
+      }
+      saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
+                                        temp_groups[[c(group, i)]],
+                                        ".rds"))
+    })
+  }
 
 }
