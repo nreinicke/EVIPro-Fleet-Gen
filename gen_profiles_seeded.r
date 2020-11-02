@@ -61,6 +61,7 @@ eviraw_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_ev
 load_profile_sedan_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_load_profile_sedan/", sep = "")
 load_profile_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_load_profile_suv/", sep = "")
 
+print("Preprocessing the raw data...")
 # Sedans: nothing returned. Results saved in specified output directories
 preprocess_NREL_data(temp_list = temp_vec,
                      inputdir_evipro = evipro_sedan_dir,
@@ -77,6 +78,8 @@ preprocess_NREL_data(temp_list = temp_vec,
                      outputdir_loadprofile = load_profile_suv_dir,
                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
+
+print("Preprocessing the raw data complete!")
 
 # Generate load profiles for fleets with a range of characteristics
 ## Setup
@@ -101,6 +104,9 @@ temp_vec <- c("-20C",
               "20C",
               "30C",
               "40C")
+
+print("Preparing information vectors...")
+
 # Fleet Size
 #		Vector can have any number of fleet sizes. Must be an integer.
 #		Note that fleet sizes greater than 30,000 are essentially scaled versions of a ~30,000 vehicle fleet. This
@@ -156,6 +162,10 @@ work_power_vec <- list("MostL2" = c(0.2, 0.8), # Most workplace charging is L2
 # 	Options are "urban" or "rural".
 #		Can only choose one.
 loc_class_vec <- list("urban")
+
+print("Finished preparing information vectors!")
+
+print("Generating load profiles...")
 
 ## Generate Fleet Load Profiles
 # Set number of parallelization workers (cores) globally
@@ -264,6 +274,7 @@ lapply(temp_vec, function(temp) {
     return(load_to_bind)
   }) # end of all_options_list future_lapply
   
+  print("Finished generating load profiles!")
   # bind results together
   fleet_load <- rbindlist(fleet_load)
   
