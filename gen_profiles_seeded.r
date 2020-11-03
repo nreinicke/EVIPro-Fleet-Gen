@@ -43,7 +43,8 @@ getNames <- function(vec, option) {
 # Set number of CPU cores to make available
 plan(multicore, workers = 13) # Quickest if workers = length(temp_vec). This consumes ~150GB RAM
 #Generate list of temperatures that we have for EVI-Pro data that we want to process
-temp_vec <- seq(-20,40, 10)
+#temp_vec <- seq(-20,40, 10)
+temp_vec <- seq(-20,-20, 10)
 temp_vec <- paste0(temp_vec, "C")
 
 work_shift <- "load_leveling"
@@ -97,13 +98,14 @@ debugFleetGen <- T
 ## Specify Fleet Characteristics
 # Ambient Temperature
 #		Vector can contain any or all of the following: -20C, -15C, -10C, -5C, 0C, 5C, 10C, 15C, 20C, 25C, 30C, 35C, 40C
-temp_vec <- c("-20C",
-              "-10C",
-              "0C",
-              "10C",
-              "20C",
-              "30C",
-              "40C")
+# temp_vec <- c("-20C",
+#               "-10C",
+#               "0C",
+#               "10C",
+#               "20C",
+#               "30C",
+#               "40C")
+temp_vec <- c("-20C")
 
 print("Preparing information vectors...")
 
