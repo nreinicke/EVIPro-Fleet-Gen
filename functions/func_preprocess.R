@@ -24,11 +24,14 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
                                  loadprofile_timestep) { # float of time step in decimal hours for calcBaseEVILoad() function
   
   # split the temp vector into groups of the desired size
-  temp_groups <- split(temp_list, ceiling(seq_along(temp_list)/4))
+  temp_groups <- split(temp_list, ceiling(seq_along(temp_list)/1))
   
   for(group in 1:length(temp_groups)) {
     # Parallelize lapply across temperatures
     future_lapply(seq(1:length(temp_groups[[group]])), function(i) {
+      
+      print(paste0("working on temperature ", temp_groups[[c(group, i)]]))
+      
       # load charging session data into data table
       evi_raw <- load_EVIPro(inputdir_evipro,
                              temp_groups[[c(group, i)]],
