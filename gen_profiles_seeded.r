@@ -21,7 +21,7 @@ source("functions/func_genFleetProfiles.R") #Creates 48-hour load profile for th
 source("functions/func_estDVMTGammaParameters.R") # Creates gamma distribution parameters from NHTS data for generating DVMT distributions
 # Setup futures parallel processing
 options(future.fork.enable = T)
-options(future.globals.maxSize = 25000 * 1024^2) # Set max RAM allowed for global variables. XMB * 1024^2
+options(future.globals.maxSize = 80000 * 1024^2) # Set max RAM allowed for global variables. XMB * 1024^2
 # Define function to retrieve names from list
 getNames <- function(vec, option) {
   # subset list to match given option	 
