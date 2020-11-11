@@ -62,25 +62,25 @@ eviraw_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_ev
 load_profile_sedan_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_load_profile_sedan/", sep = "")
 load_profile_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_load_profile_suv/", sep = "")
 
-print("Preprocessing the raw data...")
-# Sedans: nothing returned. Results saved in specified output directories
-preprocess_NREL_data(temp_list = temp_vec,
-                     inputdir_evipro = evipro_sedan_dir,
-                     inputdir_chts = "input/chts_dvmt.csv",
-                     outputdir_eviraw = eviraw_sedan_dir,
-                     outputdir_loadprofile = load_profile_sedan_dir,
-                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
-                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
-# SUVs: nothing returned. Results saved in specified output directories
-preprocess_NREL_data(temp_list = temp_vec,
-                     inputdir_evipro = evipro_suv_dir,
-                     inputdir_chts = "input/chts_dvmt.csv",
-                     outputdir_eviraw = eviraw_suv_dir,
-                     outputdir_loadprofile = load_profile_suv_dir,
-                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
-                     loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
-
-print("Preprocessing the raw data complete!")
+# print("Preprocessing the raw data...")
+# # Sedans: nothing returned. Results saved in specified output directories
+# preprocess_NREL_data(temp_list = temp_vec,
+#                      inputdir_evipro = evipro_sedan_dir,
+#                      inputdir_chts = "input/chts_dvmt.csv",
+#                      outputdir_eviraw = eviraw_sedan_dir,
+#                      outputdir_loadprofile = load_profile_sedan_dir,
+#                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
+#                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
+# # SUVs: nothing returned. Results saved in specified output directories
+# preprocess_NREL_data(temp_list = temp_vec,
+#                      inputdir_evipro = evipro_suv_dir,
+#                      inputdir_chts = "input/chts_dvmt.csv",
+#                      outputdir_eviraw = eviraw_suv_dir,
+#                      outputdir_loadprofile = load_profile_suv_dir,
+#                      vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution
+#                      loadprofile_timestep = 0.25) # time step in decimal hours of electricity demand profile
+# 
+# print("Preprocessing the raw data complete!")
 
 # Generate load profiles for fleets with a range of characteristics
 ## Setup
