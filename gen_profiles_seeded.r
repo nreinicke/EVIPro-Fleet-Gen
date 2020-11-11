@@ -172,6 +172,9 @@ print("Generating load profiles...")
 ## Generate Fleet Load Profiles
 # Set number of parallelization workers (cores) globally
 plan(multicore, workers = 12) # 12 workers = ~160GB RAM
+
+print('Creating a Data Frame of all fleet characteristics...')
+
 # Create df of all fleet characteristics options, excluding temperature. A separate results file is generated for each temperature.
 all_options <- data.table(expand.grid(numveh = fleet_size_vec,
                                       pev = pev_type_vec,
@@ -188,13 +191,19 @@ all_options_list <- split(all_options, all_options$ID)
 # Generate fleets for each ambient temperature for all permutations of all other fleet characteristics
 #   Parallelize on permutations of fleet characteristics
 lapply(temp_vec, function(temp) {
+  
+  print('Loading raw data and load profiles...')
+  
   # Load raw charging session and load profile .rds files
   raw_data <- loadRawData(temp, eviraw_sedan_dir, eviraw_suv_dir, load_profile_sedan_dir, load_profile_suv_dir)
+
+  print('Creating load profiles by looping over all permutations...')
   
   # Create load profiles by looping over all permutations of options
   fleet_load <- future_lapply(all_options_list, function(options_list) {
     
     # Create fleet and load profile -----------------------------------------------------
+    print('Creating fleet...')
     
     fleet_sub <-
       openEVI(
@@ -208,10 +217,14 @@ lapply(temp_vec, function(temp) {
         loc = options_list$loc,
         veh_class = unlist(options_list$vclass))
     
+    print('Creating load_profile of fleet...')
+    
     # Create load profile of fleet
     load_to_bind <- get_fleet_profiles(fleet_sub,
                                        unlist(options_list$numveh),
                                        raw_data[[2]])
+    
+    print('Creating names...')
     
     # Create Names ----------------------------------------------------------------------- 
     
@@ -234,6 +247,8 @@ lapply(temp_vec, function(temp) {
     
     # Summarize and Return Data ----------------------------------------------------------
     
+    print('Summarizing data...')
+    
     # summarize data based on distinct options
     load_to_bind[time_of_day > 24,time_of_day := time_of_day - 24] # Wrap loads after hour 24 to morning
     load_to_bind <- load_to_bind[, .(kw = sum(avg_kw)),
@@ -255,6 +270,8 @@ lapply(temp_vec, function(temp) {
                                         "time_of_day"
                                  )
     ] # End summarize results
+    
+    print('Sorting results...')
     
     # Sort results
     setkey(load_to_bind,
