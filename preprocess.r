@@ -22,19 +22,19 @@ for(work_shift in 1:length(work_shift_vec)){
     
     print(paste0("Working on load shift combination: work-", work_shift_vec[[work_shift]], " home-", home_shift_vec[[home_shift]]))
     
-    # # Sedans: nothing returned. Results saved in specified output directories
-    # print("working on sedan data")
-    # preprocess_NREL_data(temp_list = temp_vec,
-    #                     inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_sedan/",
-    #                     inputdir_chts = "input/chts_dvmt.csv",
-    #                     outputdir_eviraw = "input/preprocessed/evi_raw_sedan/",
-    #                     outputdir_loadprofile = "input/preprocessed/load_profile_sedan/",
-    #                     vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
-    #                     loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
-    #                     work_load_shift = work_shift_vec[[work_shift]], # string of load shift strategy
-    #                     home_load_shift = home_shift_vec[[home_shift]], # string of load shift strategy
-    #                     temp_group_size = 4, # The number of temperatures that the program will work on at a time
-    #                     desired_time = 1.0) # desired time specifically for the timed charging load shift strategy
+    # Sedans: nothing returned. Results saved in specified output directories
+    print("working on sedan data")
+    preprocess_NREL_data(temp_list = temp_vec,
+                        inputdir_evipro = "input/EVIPro_sessions_all_ambient_temps_sedan/",
+                        inputdir_chts = "input/chts_dvmt.csv",
+                        outputdir_eviraw = "input/preprocessed/evi_raw_sedan/",
+                        outputdir_loadprofile = "input/preprocessed/load_profile_sedan/",
+                        vmt_bin_size = 10, # bin width in miles of fleet dvmt distribution. Must be an integer
+                        loadprofile_timestep = 0.25, # time step in decimal hours of electricity demand profile
+                        work_load_shift = work_shift_vec[[work_shift]], # string of load shift strategy
+                        home_load_shift = home_shift_vec[[home_shift]], # string of load shift strategy
+                        temp_group_size = 4, # The number of temperatures that the program will work on at a time
+                        desired_time = 1.0) # desired time specifically for the timed charging load shift strategy
     
     # SUVs: nothing returned. Results saved in specified output directories
     print("working on SUV data")
