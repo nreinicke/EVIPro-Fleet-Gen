@@ -18,8 +18,8 @@ work_shift_vec <- c("min_delay", "max_delay", "load_leveling")
 home_shift_vec <- c("min_delay", "max_delay", "load_leveling", "timed_charging")
 
 # Setup output directories
-eviraw_sedan_dir <- paste("input/preprocessed/evi_raw_sedan/", sep = "")
-eviraw_suv_dir <- paste("input/preprocessed/evi_raw_suv/", sep = "")
+eviraw_sedan_dir <- "input/preprocessed/evi_raw_sedan/"
+eviraw_suv_dir <- "input/preprocessed/evi_raw_suv/"
 
 for(i in 1:length(work_shift_vec)){
   for(j in 1:length(home_shift_vec)) {
