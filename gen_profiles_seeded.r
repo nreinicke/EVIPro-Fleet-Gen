@@ -50,13 +50,9 @@ temp_vec <- paste0(temp_vec, "C")
 work_shift <- "load_leveling"
 home_shift <- "load_leveling"
 
-# Setup input directories
-evipro_sedan_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_EVIPro_sessions_all_ambient_temps_sedan/", sep = "")
-evipro_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_EVIPro_sessions_all_ambient_temps_suv/", sep = "")
-
 # Setup output directories
-eviraw_sedan_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_evi_raw_sedan/", sep = "")
-eviraw_suv_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_evi_raw_suv/", sep = "")
+eviraw_sedan_dir <- "input/preprocessed/evi_raw_sedan/"
+eviraw_suv_dir <- "input/preprocessed/evi_raw_suv/"
 
 # Setup load profile directories
 load_profile_sedan_dir <- paste("input/preprocessed/", work_shift, "_", home_shift, "_load_profile_sedan/", sep = "")
