@@ -31,7 +31,8 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
   
 		# Parallelize lapply across temperatures in groups according to group size
     cl <- makeCluster(13, outfile="")
-    clusterExport(cl=cl, c('work_shift_vec', 'home_shift_vec', 'home_shift', 'work_shift'))
+    clusterExport(cl=cl, c('work_shift_vec', 'home_shift_vec', 'home_shift', 'work_shift', 'eviraw_sedan_dir', 
+                           'load_profile_sedan_dir', 'eviraw_suv_dir', 'load_profile_suv_dir'))
     
     for(group in 1:length(temp_groups)) {
 		  parLapply(cl, seq(1:length(temp_groups[[group]])), function(i) {
@@ -70,10 +71,6 @@ preprocess_NREL_data <- function(temp_list,              # vector of character s
 		    }
 		    saveRDS(evi_load_profiles, paste0(outputdir_loadprofile,
 		                                      temp_groups[[c(group, i)]],
-		                                      "_work_",
-		                                      work_load_shift,
-		                                      "_home_",
-		                                      home_load_shift,
 		                                      ".rds"))
 		  })
     }
